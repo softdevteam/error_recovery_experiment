@@ -1,0 +1,37 @@
+diff --git src/lib/parser.rs src/lib/parser.rs
+index dcb12bc..ab5ebda 100644
+--- src/lib/parser.rs
++++ src/lib/parser.rs
+@@ -163,6 +163,7 @@ impl<'a, TokId: PrimInt + Unsigned> Parser<'a, TokId> {
+                 Some(Action::Accept) => {
+                     debug_assert_eq!(la_tidx, self.grm.eof_term_idx());
+                     debug_assert_eq!(tstack.len(), 1);
++                    println!("recovery budget {:?}", recovery_budget.as_secs() as f64 + recovery_budget.subsec_nanos() as f64 * 1e-9);
+                     return true;
+                 },
+                 None => {
+@@ -201,6 +202,7 @@ impl<'a, TokId: PrimInt + Unsigned> Parser<'a, TokId> {
+                     errors.push(ParseError{state_idx: st, lexeme_idx: la_idx,
+                                            lexeme: la_lexeme, repairs: repairs});
+                     if !keep_going {
++                        println!("recovery budget {:?}", recovery_budget.as_secs() as f64 + recovery_budget.subsec_nanos() as f64 * 1e-9);
+                         return false;
+                     }
+                     la_idx = new_la_idx;
+diff --git src/main.rs src/main.rs
+index bba4e8b..0596c15 100644
+--- src/main.rs
++++ src/main.rs
+@@ -185,10 +185,12 @@ fn main() {
+     match parse_rcvry::<u16, _>(recoverykind, &grm, &term_cost, &sgraph, &stable, &lexemes) {
+         Ok(pt) => println!("{}", pt.pp(&grm, &input)),
+         Err((o_pt, errs)) => {
++            /*
+             match o_pt {
+                 Some(pt) => println!("{}", pt.pp(&grm, &input)),
+                 None     => println!("Unable to repair input sufficiently to produce parse tree.\n")
+             }
++            */
+             for e in errs {
+                 let (line, col) = lexer.line_and_col(e.lexeme()).unwrap();
+                 if e.repairs().is_empty() {

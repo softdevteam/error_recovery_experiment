@@ -1,0 +1,12 @@
+diff --git src/lib/mf.rs src/lib/mf.rs
+index 7163543..1c61636 100644
+--- src/lib/mf.rs
++++ src/lib/mf.rs
+@@ -516,6 +516,7 @@ impl<'a, TokId: PrimInt + Unsigned> MF<'a, TokId> {
+                                 .cmp(&y.2.len()))
+                .then_with(|| x.2.cmp(&y.2))
+         });
++        cnds.reverse();
+ 
+         cnds.into_iter()
+             .map(|x| x.2)
