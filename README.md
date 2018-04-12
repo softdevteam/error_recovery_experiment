@@ -17,3 +17,9 @@ the Blackbox server and, many hours later, you will have a `combos` file (which
 is the list of pairs needed to regenerate the source files) as well as the
 Java source in a `src_files` directory. **The latter must never be
 redistributed.** However, the `combos` file is safe is redistribution.
+
+
+## Run the experiments
+
+`cd runner && ./build.sh` will build and run the experiments. Output files will
+be `runner/*.out`.
