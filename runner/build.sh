@@ -2,7 +2,7 @@
 
 set -e
 
-LRPARV=7193be36
+LRPARV=b7c01b1c
 GRAMMARSV=fb1c6550
 
 if [ ! -d lrpar ]; then
