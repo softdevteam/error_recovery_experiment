@@ -1,12 +1,32 @@
 diff --git src/lib/mf.rs src/lib/mf.rs
-index 88ed6c7..8236f2f 100644
+index 88ed6c7..93a11dd 100644
 --- src/lib/mf.rs
 +++ src/lib/mf.rs
-@@ -610,6 +610,7 @@ pub(crate) fn simplify_repairs(all_rprs: &mut Vec<Vec<ParseRepair>>)
-                   .then_with(|| x.cmp(&y))
-             });
-     all_rprs.dedup();
-+    all_rprs.reverse();
- }
+@@ -521,7 +521,7 @@ pub(crate) fn rank_cnds<TokId: PrimInt + Unsigned>
+                      -> Vec<Vec<ParseRepair>>
+ {
+     let mut cnds = Vec::new();
+-    let mut furthest = 0;
++    let mut least = in_la_idx + TRY_PARSE_AT_MOST;
+     for rpr_seqs in in_cnds.into_iter() {
+         if Instant::now() >= finish_by {
+             return vec![];
+@@ -537,14 +537,14 @@ pub(crate) fn rank_cnds<TokId: PrimInt + Unsigned>
+                                 in_la_idx + TRY_PARSE_AT_MOST,
+                                 &mut pstack,
+                                 &mut None);
+-        if la_idx >= furthest {
+-            furthest = la_idx;
++        if la_idx < least {
++            least = la_idx;
+         }
+         cnds.push((pstack, la_idx, rpr_seqs));
+     }
  
- pub(crate) struct Dist {
+-    // Remove any elements except those which parsed as far as possible.
+-    cnds = cnds.into_iter().filter(|x| x.1 == furthest).collect::<Vec<_>>();
++    // Only keep elements which parsed the least far
++    cnds = cnds.into_iter().filter(|x| x.1 == least).collect::<Vec<_>>();
+ 
+     cnds.into_iter()
+         .flat_map(|x| x.2)
