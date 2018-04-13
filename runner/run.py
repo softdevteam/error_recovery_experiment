@@ -1,6 +1,6 @@
 #! /usr/bin/env python2.7
 
-import os, re, sys
+import os, re, sys, time
 from subprocess import Popen
 from tempfile import TemporaryFile
 
@@ -18,9 +18,12 @@ i = 0
 with open(outp, "w") as outf:
     for l in os.listdir(src_files):
         i += 1
-        if i % 10 == 0:
+        if i % 100 == 0:
             sys.stdout.write(".")
             sys.stdout.flush()
+        if i % 1000 == 0:
+            # Let the machine have a chance to cool down every so often
+            time.sleep(10)
         p = os.path.join(src_files, l)
         with TemporaryFile() as tmpf:
             lrpar = Popen([binary, "-r", recoverer, yaccp, lexp, p], stdout=tmpf)
