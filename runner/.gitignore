@@ -2,3 +2,5 @@ grammars/
 lrpar/
 src_files/
 *.csv
+experimentstats.tex
+table.tex
