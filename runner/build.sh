@@ -2,7 +2,7 @@
 
 set -e
 
-LRPARV=b7c01b1c
+LRPARV=18921c9b
 GRAMMARSV=fb1c6550
 
 if [ ! -d lrpar ]; then
@@ -31,6 +31,5 @@ if [ ! -d grammars ]; then
 fi
 
 ./run.py src_files lrpar/target/release/lrpar cpctplus grammars/java7/java.l grammars/java7/java.y cpctplus.csv
-./run.py src_files lrpar/target/release/lrpar cpctplusdyndist grammars/java7/java.l grammars/java7/java.y cpctplusdyndist.csv
 ./run.py src_files lrpar/target/release/lrpar mf grammars/java7/java.l grammars/java7/java.y mf.csv
 ./run.py src_files lrpar_rev/target/release/lrpar mf grammars/java7/java.l grammars/java7/java.y mf_rev.csv
