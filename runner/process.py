@@ -4,6 +4,16 @@ import os
 from os import listdir, stat
 from decimal import Decimal
 
+import matplotlib
+matplotlib.use('Agg')
+matplotlib.rcParams['text.usetex'] = True
+matplotlib.rcParams['text.latex.preamble'] = [r'\usepackage[cm]{sfmath}']
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = 'cm'
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 SRC_FILES_DIR = "src_files"
 
 class Results:
@@ -57,6 +67,45 @@ def corpus_size():
         num_files += 1
     return num_files, size_bytes
 
+def time_histogram(run, p):
+    sns.set(style="whitegrid")
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='sans-serif')
+    fig, ax = plt.subplots(figsize=(8, 4))
+    d = map(lambda x: float(x[1]), run.rows)
+    n, bins, patches = ax.hist(d, 75, log=True, color="black", rwidth=.8)
+    ax.set_xlabel('Recovery time (s)')
+    ax.set_ylabel('Number of files (log$_{10}$)')
+    ax.grid(linewidth=0.25)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+    plt.xlim(xmin=0, xmax=0.5)
+    plt.ylim(ymin=0, ymax=len(d))
+    plt.savefig(p, format="pdf")
+
+def error_locs_histogram(run1, run2, p):
+    sns.set(style="whitegrid")
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='sans-serif')
+    fig, ax = plt.subplots(figsize=(8, 4))
+    d1 = map(lambda x: float(x[3]), run1.rows)
+    d2 = map(lambda x: float(x[3]), run2.rows)
+    n, bins, patches = ax.hist([d1, d2], 250, log=True, color=["black", "darkgray"], \
+                               label=[r"\textrm{MF}", r"\textrm{MF}$_{\textrm{rev}}$"], lw=0, rwidth=1)
+    ax.set_xlabel('Number of error locations')
+    ax.set_ylabel('Number of files (log$_{10}$)')
+    ax.grid(linewidth=0.25)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+    plt.xlim(xmin=0, xmax=250)
+    plt.ylim(ymin=0, ymax=len(d1))
+    plt.legend(loc='upper right')
+    plt.savefig(p, format="pdf")
+
 cpctplus = process("\\cpctplus", "cpctplus.csv")
 mf = process("\\mf", "mf.csv")
 mfrev = process("\\mfrev", "mf_rev.csv")
@@ -90,3 +139,6 @@ with open("experimentstats.tex", "w") as f:
 with open("table.tex", "w") as f:
     for x in [cpctplus, mf, mfrev]:
         f.write("%s & %.5f & %.5f & %.2f & \\numprint{%d} \\\\\n" % (x.latex_name, x.mean_time, x.median_time, x.failure_rate, x.num_error_locs))
+
+time_histogram(mf, "mf_histogram.pdf")
+error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram.pdf")
