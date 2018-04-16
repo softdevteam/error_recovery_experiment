@@ -10,6 +10,7 @@ matplotlib.rcParams['text.usetex'] = True
 matplotlib.rcParams['text.latex.preamble'] = [r'\usepackage[cm]{sfmath}']
 matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.sans-serif'] = 'cm'
+from matplotlib.ticker import ScalarFormatter
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -83,6 +84,10 @@ def time_histogram(run, p):
     ax.yaxis.set_ticks_position('left')
     plt.xlim(xmin=0, xmax=0.5)
     plt.ylim(ymin=0, ymax=len(d))
+    ax.set_yticks([20, 200, 2000, 20000, 200000])
+    formatter = ScalarFormatter()
+    formatter.set_scientific(False)
+    ax.yaxis.set_major_formatter(formatter)
     plt.savefig(p, format="pdf")
 
 def error_locs_histogram(run1, run2, p):
@@ -101,8 +106,12 @@ def error_locs_histogram(run1, run2, p):
     ax.spines['top'].set_visible(False)
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
-    plt.xlim(xmin=0, xmax=250)
+    plt.xlim(xmin=0, xmax=300)
     plt.ylim(ymin=0, ymax=len(d1))
+    ax.set_yticks([20, 200, 2000, 20000, 200000])
+    formatter = ScalarFormatter()
+    formatter.set_scientific(False)
+    ax.yaxis.set_major_formatter(formatter)
     plt.legend(loc='upper right')
     plt.savefig(p, format="pdf")
 
