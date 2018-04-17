@@ -16,7 +16,7 @@ fi
 
 if [ ! -d lrpar ]; then
     git clone https://github.com/softdevteam/lrpar
-    cd lrpar && git checkout 1e533a34
+    cd lrpar && git checkout 18921c9b
     cargo build --release
     cd ..
 fi
