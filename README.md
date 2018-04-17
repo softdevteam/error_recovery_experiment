@@ -16,7 +16,7 @@ generate Java source files from user input. Run `build_blackbox_data.sh` on
 the Blackbox server and, many hours later, you will have a `combos` file (which
 is the list of pairs needed to regenerate the source files) as well as the
 Java source in a `src_files` directory. **The latter must never be
-redistributed.** However, the `combos` file is safe is redistribution.
+redistributed.** However, the `combos` file is safe to redistribute.
 
 
 ## Run the experiments
