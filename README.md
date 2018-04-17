@@ -22,4 +22,5 @@ redistributed.** However, the `combos` file is safe is redistribution.
 ## Run the experiments
 
 `cd runner && ./build.sh` will build and run the experiments. Output files will
-be `runner/*.out`.
+be `runner/*.out`. Output PDF and TeX files can be produced with `cd runner &&
+./process.py`.
