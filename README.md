@@ -21,6 +21,13 @@ redistributed.** However, the `combos` file is safe to redistribute.
 
 ## Run the experiments
 
-`cd runner && ./build.sh` will build and run the experiments. Output files will
-be `runner/*.out`. Output PDF and TeX files can be produced with `cd runner &&
+`cd runner && ./build.sh` will build the experiments. If files called
+`runner/lrpar_Cargo.lock` or `runner/lrpar_rev_Cargo.lock` are present, they
+will be used as `Cargo.lock` files for `mf` and `mfref`.
+
+`cd runner && ./run.sh` will run the experiments. You need to have a directory
+`src_files` with all the relevant source files *inside* the `runner/` directory.
+Output files will be called `runner/*.csv`.
+
+Human friendly PDF and TeX files can be produced with `cd runner &&
 ./process.py`.
