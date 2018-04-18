@@ -58,7 +58,7 @@ with open("combos", "w") as f:
             tff, tfp = tempfile.mkstemp()
             os.close(tff)
             while True:
-                source_file_id, master_event_id = q.get()
+                master_event_id, source_file_id = q.get()
                 rtn = os.system("timeout -s KILL 10 /tools/nccb/bin/print-compile-input /data/compile-inputs %d %d > %s" % (source_file_id, master_event_id, tfp))
                 if rtn != 0:
                     q.task_done()
@@ -89,17 +89,16 @@ with open("combos", "w") as f:
                     sys.stdout.flush()
 
     c1 = cnx.cursor()
-    c1.execute("""SELECT compile_inputs.source_file_id, master_events.id
-                  FROM master_events, compile_events, compile_inputs
-                  WHERE success=0
-                        AND master_events.event_id=compile_events.id
-                        AND compile_events.id=compile_event_id
-                        AND (compile_events.reason is NULL
-                             OR compile_events.reason="user")
-                        AND master_events.event_type="CompileEvent"
-                        AND master_events.id >= 1000000
-                        AND master_events.id < 1900000000
-                        AND created_at <= "2017-12-31"
+    c1.execute("""SELECT master_events.id, compile_inputs.source_file_id
+                  FROM master_events straight_join compile_events straight_join compile_inputs
+                  WHERE      compile_events.success=0
+                         AND master_events.event_id=compile_events.id
+                         AND (compile_events.reason IS null
+                              OR compile_events.reason="user")
+                         AND master_events.event_type="CompileEvent"
+                         AND master_events.id >= 1000000
+                         AND master_events.id < 1900000000
+                         AND compile_inputs.compile_event_id = compile_events.id
                   ORDER BY RAND()
                """)
 
