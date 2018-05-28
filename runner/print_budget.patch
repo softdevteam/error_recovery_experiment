@@ -1,7 +1,26 @@
-diff --git src/lib/parser.rs src/lib/parser.rs
-index dcb12bc..ab5ebda 100644
---- src/lib/parser.rs
-+++ src/lib/parser.rs
+diff --git a/src/lib/astar.rs b/src/lib/astar.rs
+index c59fe84..43578c4 100644
+--- a/src/lib/astar.rs
++++ b/src/lib/astar.rs
+@@ -135,6 +135,7 @@ pub(crate) fn astar_all<N, FN, FM, FS>(start_node: N,
+         }
+     }
+ 
++    println!("repair cost {}", c);
+     scs_nodes
+ }
+ 
+@@ -211,5 +212,6 @@ pub(crate) fn dijkstra<N, FM, FN, FS>(start_node: N,
+         }
+     }
+ 
++    println!("repair cost {}", c);
+     scs_nodes
+ }
+diff --git a/src/lib/parser.rs b/src/lib/parser.rs
+index 3aaefac..0d9e041 100644
+--- a/src/lib/parser.rs
++++ b/src/lib/parser.rs
 @@ -163,6 +163,7 @@ impl<'a, TokId: PrimInt + Unsigned> Parser<'a, TokId> {
                  Some(Action::Accept) => {
                      debug_assert_eq!(la_tidx, self.grm.eof_term_idx());
@@ -18,10 +37,10 @@ index dcb12bc..ab5ebda 100644
                          return false;
                      }
                      la_idx = new_la_idx;
-diff --git src/main.rs src/main.rs
-index bba4e8b..0596c15 100644
---- src/main.rs
-+++ src/main.rs
+diff --git a/src/main.rs b/src/main.rs
+index 0c71440..387710f 100644
+--- a/src/main.rs
++++ b/src/main.rs
 @@ -185,10 +185,12 @@ fn main() {
      match parse_rcvry::<u16, _>(recoverykind, &grm, &term_cost, &sgraph, &stable, &lexemes) {
          Ok(pt) => println!("{}", pt.pp(&grm, &input)),

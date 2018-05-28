@@ -12,7 +12,7 @@ if [ ! -d lrpar ]; then
         cp ../lrpar_Cargo.lock Cargo.lock
     fi
     git checkout ${LRPARV}
-    patch -p0 < ../print_budget.patch
+    patch -p1 < ../print_budget.patch
     cargo build --release
     cd ..
 fi
@@ -24,7 +24,7 @@ if [ ! -d lrpar_rev ]; then
         cp ../lrpar_rev_Cargo.lock Cargo.lock
     fi
     git checkout ${LRPARV}
-    patch -p0 < ../print_budget.patch
+    patch -p1 < ../print_budget.patch
     patch -p0 < ../rev_rank.patch
     cargo build --release
     cd ..
@@ -34,4 +34,10 @@ if [ ! -d grammars ]; then
     git clone https://github.com/softdevteam/grammars/
     cd grammars && git checkout ${GRAMMARSV}
     cd ..
+fi
+
+if [ ! -d pykalibera ]; then
+    git clone https://github.com/softdevteam/libkalibera/
+    mv libkalibera/python/pykalibera pykalibera
+    rm -rf libkalibera
 fi
