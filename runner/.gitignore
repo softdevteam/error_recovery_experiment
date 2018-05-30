@@ -4,3 +4,4 @@ src_files/
 *.csv
 experimentstats.tex
 table.tex
+*.pdf
