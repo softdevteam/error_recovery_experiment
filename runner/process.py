@@ -313,7 +313,7 @@ with open("experimentstats.tex", "w") as f:
         f.write(r"\newcommand{%ssuccessrate}{%.2f\%%{\footnotesize$\pm$%.2f\%%}\xspace}" % \
                 (x.latex_name, 100.0 - x.failure_rate_ci.median, x.failure_rate_ci.error))
         f.write("\n")
-        f.write(r"\newcommand{%sfailurerate}{%.2f\%%${\footnotesize$\pm$%.2f\%%}\xspace}" % \
+        f.write(r"\newcommand{%sfailurerate}{%.2f\%%{\footnotesize$\pm$%.2f\%%}\xspace}" % \
                 (x.latex_name, x.failure_rate_ci.median, x.failure_rate_ci.error))
         f.write("\n")
         f.write(r"\newcommand{%smeantime}{%.4fs{\footnotesize$\pm$%.4fs}\xspace}" % \
