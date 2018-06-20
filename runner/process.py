@@ -139,7 +139,7 @@ def confidence_ratio_error_locs(x, y):
     return confidence_slice(out, "0.99")
 
 def mean(l):
-    return math.fsum(l) / float(len(l))
+    return float(sum(l) / Decimal(len(l)))
 
 def median(l):
     l.sort()
