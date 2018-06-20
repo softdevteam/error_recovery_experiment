@@ -3,6 +3,7 @@
 import math, random, os, sys
 from os import listdir, stat
 from decimal import Decimal
+import decimal
 
 import matplotlib
 matplotlib.use('Agg')
@@ -138,7 +139,7 @@ def confidence_ratio_error_locs(x, y):
     return confidence_slice(out, "0.99")
 
 def mean(l):
-    return math.fsum(l) / float(len(l))
+    return float(sum(l) / Decimal(len(l)))
 
 def median(l):
     l.sort()
@@ -215,6 +216,12 @@ def time_histogram(run, p):
         locs.append((HISTOGRAM_BINS / 5) * i - 0.5)
         labs.append(i / 10.0)
     plt.xticks(locs, labs)
+    yticks = []
+    i = len(run.pexecs)
+    while i >= 10:
+        yticks.append(i)
+        i /= 10
+    plt.yticks(yticks, [str(x) for x in yticks])
     formatter = ScalarFormatter()
     formatter.set_scientific(False)
     ax.yaxis.set_major_formatter(formatter)
@@ -289,11 +296,18 @@ def error_locs_histogram(run1, run2, p, zoom=None):
         locs.append((ERROR_LOCS_HISTOGRAM_BINS / 7) * i * 2 - 0.5)
         labs.append(int(round((max_error_locs / 7.0) * i)))
     plt.xticks(locs, labs)
+    yticks = []
+    i = len(run1.pexecs)
+    while i >= 10:
+        yticks.append(i)
+        i /= 10
+    plt.yticks(yticks, [str(x) for x in yticks])
     formatter = ScalarFormatter()
     formatter.set_scientific(False)
     ax.yaxis.set_major_formatter(formatter)
     plt.savefig(p, format="pdf")
 
+decimal.getcontext().prec = 12
 cpctplus = process("\\cpctplus", "cpctplus.csv")
 mf = process("\\mf", "mf.csv")
 mfrev = process("\\mfrev", "mf_rev.csv")
@@ -353,5 +367,5 @@ print
 sys.stdout.write("Error locations histogram...")
 sys.stdout.flush()
 error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_full.pdf")
-error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_zoomed.pdf", zoom=150)
+error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_zoomed.pdf", zoom=75)
 print
