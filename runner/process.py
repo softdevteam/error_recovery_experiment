@@ -216,6 +216,12 @@ def time_histogram(run, p):
         locs.append((HISTOGRAM_BINS / 5) * i - 0.5)
         labs.append(i / 10.0)
     plt.xticks(locs, labs)
+    yticks = []
+    i = len(run.pexecs)
+    while i >= 10:
+        yticks.append(i)
+        i /= 10
+    plt.yticks(yticks, [str(x) for x in yticks])
     formatter = ScalarFormatter()
     formatter.set_scientific(False)
     ax.yaxis.set_major_formatter(formatter)
@@ -290,6 +296,12 @@ def error_locs_histogram(run1, run2, p, zoom=None):
         locs.append((ERROR_LOCS_HISTOGRAM_BINS / 7) * i * 2 - 0.5)
         labs.append(int(round((max_error_locs / 7.0) * i)))
     plt.xticks(locs, labs)
+    yticks = []
+    i = len(run1.pexecs)
+    while i >= 10:
+        yticks.append(i)
+        i /= 10
+    plt.yticks(yticks, [str(x) for x in yticks])
     formatter = ScalarFormatter()
     formatter.set_scientific(False)
     ax.yaxis.set_major_formatter(formatter)
