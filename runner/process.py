@@ -367,5 +367,5 @@ print
 sys.stdout.write("Error locations histogram...")
 sys.stdout.flush()
 error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_full.pdf")
-error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_zoomed.pdf", zoom=150)
+error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_zoomed.pdf", zoom=75)
 print
