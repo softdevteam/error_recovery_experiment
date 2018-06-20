@@ -3,6 +3,7 @@
 import math, random, os, sys
 from os import listdir, stat
 from decimal import Decimal
+import decimal
 
 import matplotlib
 matplotlib.use('Agg')
@@ -294,6 +295,7 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     ax.yaxis.set_major_formatter(formatter)
     plt.savefig(p, format="pdf")
 
+decimal.getcontext().prec = 12
 cpctplus = process("\\cpctplus", "cpctplus.csv")
 mf = process("\\mf", "mf.csv")
 mfrev = process("\\mfrev", "mf_rev.csv")
