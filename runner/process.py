@@ -51,6 +51,8 @@ class Results:
             benches[p.name].append(p)
         self.pexecs = list(benches.values())
         self.num_runs = num_runs
+        self.bootstrapped_recovery_means = None
+        self.bootstrapped_error_locs = None
 
         sys.stdout.write("%s: recovery_times..." % latex_name)
         sys.stdout.flush()
@@ -68,6 +70,8 @@ class Results:
         print
 
     def bootstrap_recovery_means(self):
+        if self.bootstrapped_recovery_means:
+            return self.bootstrapped_recovery_means
         out = []
         for i in range(BOOTSTRAP):
             means = []
@@ -75,6 +79,7 @@ class Results:
                 pexec = random.choice(pexecs)
                 means.append(pexec.recovery_time)
             out.append(mean(means))
+        self.bootstrapped_recovery_means = out
         return out
 
     def bootstrap_recovery_medians(self):
@@ -99,6 +104,8 @@ class Results:
         return out
 
     def bootstrap_error_locs(self):
+        if self.bootstrapped_error_locs:
+            return self.bootstrapped_error_locs
         out = []
         for i in range(BOOTSTRAP):
             error_locs = 0
@@ -106,6 +113,7 @@ class Results:
                 pexec = random.choice(pexecs)
                 error_locs += len(pexec.costs)
             out.append(error_locs)
+        self.bootstrapped_error_locs = out
         return out
 
     def bootstrap_costs(self):
