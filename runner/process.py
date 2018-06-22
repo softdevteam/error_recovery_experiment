@@ -2,8 +2,6 @@
 
 import math, random, os, sys
 from os import listdir, stat
-from decimal import Decimal
-import decimal
 
 import matplotlib
 matplotlib.use('Agg')
@@ -139,7 +137,7 @@ def confidence_ratio_error_locs(x, y):
     return confidence_slice(out, "0.99")
 
 def mean(l):
-    return float(sum(l) / Decimal(len(l)))
+    return math.fsum(l) / float(len(l))
 
 def median(l):
     l.sort()
@@ -165,7 +163,7 @@ def process(latex_name, p):
                 assert s[3] == "0"
                 succeeded = False
             costs = [int(x) for x in s[4].split(":") if x != ""]
-            pexec = PExec(s[0], int(s[1]), Decimal(s[2]), succeeded, costs)
+            pexec = PExec(s[0], int(s[1]), float(s[2]), succeeded, costs)
             max_run_num = max(max_run_num, pexec.run_num)
             pexecs.append(pexec)
 
@@ -307,7 +305,6 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     ax.yaxis.set_major_formatter(formatter)
     plt.savefig(p, format="pdf")
 
-decimal.getcontext().prec = 12
 cpctplus = process("\\cpctplus", "cpctplus.csv")
 mf = process("\\mf", "mf.csv")
 mfrev = process("\\mfrev", "mf_rev.csv")
