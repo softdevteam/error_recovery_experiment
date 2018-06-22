@@ -255,7 +255,11 @@ def error_locs_histogram(run1, run2, p, zoom=None):
         bbins = [[] for _ in range(num_bins)]
         bin_width = max_error_locs / num_bins
         for _ in range(BOOTSTRAP):
-            d = [len(random.choice(pexecs).costs) for pexecs in run.pexecs]
+            d = []
+            for pexecs in run.pexecs:
+                pexec = random.choice(pexecs)
+                if pexec.succeeded:
+                    d.append(len(pexec.costs))
             if zoom is not None:
                 d = filter(lambda x: x <= zoom, d)
             hbins, _ = histogram(d, bins=num_bins, range=(0, max_error_locs))
