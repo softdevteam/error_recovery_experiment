@@ -171,6 +171,9 @@ def process(latex_name, p):
                 assert s[3] == "0"
                 succeeded = False
             costs = [int(x) for x in s[4].split(":") if x != ""]
+            if succeeded and len(costs) == 0:
+                print "Warning: %s (pexec #%s) succeeded without parsing errors" % (s[0], s[1])
+                continue
             pexec = PExec(s[0], int(s[1]), float(s[2]), succeeded, costs)
             max_run_num = max(max_run_num, pexec.run_num)
             pexecs.append(pexec)
