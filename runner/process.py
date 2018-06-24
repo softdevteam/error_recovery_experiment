@@ -313,12 +313,36 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     ax.yaxis.set_major_formatter(formatter)
     plt.savefig(p, format="pdf")
 
-cpctplus = process("\\cpctplus", "cpctplus.csv")
-mf = process("\\mf", "mf.csv")
-mfrev = process("\\mfrev", "mf_rev.csv")
-assert cpctplus.num_runs == mf.num_runs == mfrev.num_runs
-
 with open("experimentstats.tex", "w") as f:
+    # Loading in the CSV files and boostrapping consumes *lots* of memory (gigabytes), so we do it
+    # in an order that allows us to keep as few things in memory as we can.
+    cpctplus = process("\\cpctplus", "cpctplus.csv")
+    mf = process("\\mf", "mf.csv")
+
+    mf_cpctplus_ratio_ci = confidence_ratio_recovery_means(mf, cpctplus)
+    f.write(r"\newcommand{\mfcpctplusfailurerateratio}{%.1f\%%{\footnotesize$\pm$%.1f\%%}\xspace}" % \
+            (mf_cpctplus_ratio_ci.median, mf_cpctplus_ratio_ci.error))
+    f.write("\n")
+
+    # Flush some caches
+    mf.bootstrapped_recovery_means = None
+    cpctplus.bootstrapped_recovery_means = None
+
+    mfrev = process("\\mfrev", "mf_rev.csv")
+    assert cpctplus.num_runs == mf.num_runs == mfrev.num_runs
+    mfrev_mf_ratio_ci = confidence_ratio_error_locs(mfrev, mf)
+    f.write(r"\newcommand{\mfreverrorlocsratioovermf}{%.1f\%%{\footnotesize$\pm$%.2f\%%}\xspace}" % \
+            (mfrev_mf_ratio_ci.median, mfrev_mf_ratio_ci.error))
+    f.write("\n")
+
+    # Flush all caches
+    cpctplus.bootstrapped_recovery_means = None
+    cpctplus.bootstrapped_error_locs = None
+    mf.bootstrapped_recovery_means = None
+    mf.bootstrapped_error_locs = None
+    mfrev.bootstrapped_recovery_means = None
+    mfrev.bootstrapped_error_locs = None
+
     f.write(r"\newcommand{\numruns}{\numprint{%s}\xspace}" % str(cpctplus.num_runs))
     f.write("\n")
     f.write(r"\newcommand{\numbootstrap}{\numprint{%s}\xspace}" % str(BOOTSTRAP))
@@ -344,16 +368,6 @@ with open("experimentstats.tex", "w") as f:
         f.write(r"\newcommand{%serrorlocs}{\numprint{%s}{\footnotesize$\pm$\numprint{%s}}\xspace}" % \
                 (x.latex_name, x.error_locs_ci.median, x.error_locs_ci.error))
         f.write("\n")
-
-    mf_cpctplus_ratio_ci = confidence_ratio_recovery_means(mf, cpctplus)
-    f.write(r"\newcommand{\mfcpctplusfailurerateratio}{%.1f\%%{\footnotesize$\pm$%.1f\%%}\xspace}" % \
-            (mf_cpctplus_ratio_ci.median, mf_cpctplus_ratio_ci.error))
-    f.write("\n")
-
-    mfrev_mf_ratio_ci = confidence_ratio_error_locs(mfrev, mf)
-    f.write(r"\newcommand{\mfreverrorlocsratioovermf}{%.1f\%%{\footnotesize$\pm$%.2f\%%}\xspace}" % \
-            (mfrev_mf_ratio_ci.median, mfrev_mf_ratio_ci.error))
-    f.write("\n")
 
 with open("table.tex", "w") as f:
     for x in [cpctplus, mf, mfrev]:
