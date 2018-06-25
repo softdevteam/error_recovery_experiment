@@ -2,8 +2,6 @@
 
 import math, random, os, sys
 from os import listdir, stat
-from decimal import Decimal
-import decimal
 
 import matplotlib
 matplotlib.use('Agg')
@@ -53,6 +51,8 @@ class Results:
             benches[p.name].append(p)
         self.pexecs = list(benches.values())
         self.num_runs = num_runs
+        self.bootstrapped_recovery_means = None
+        self.bootstrapped_error_locs = None
 
         sys.stdout.write("%s: recovery_times..." % latex_name)
         sys.stdout.flush()
@@ -70,6 +70,8 @@ class Results:
         print
 
     def bootstrap_recovery_means(self):
+        if self.bootstrapped_recovery_means:
+            return self.bootstrapped_recovery_means
         out = []
         for i in range(BOOTSTRAP):
             means = []
@@ -77,6 +79,7 @@ class Results:
                 pexec = random.choice(pexecs)
                 means.append(pexec.recovery_time)
             out.append(mean(means))
+        self.bootstrapped_recovery_means = out
         return out
 
     def bootstrap_recovery_medians(self):
@@ -101,6 +104,8 @@ class Results:
         return out
 
     def bootstrap_error_locs(self):
+        if self.bootstrapped_error_locs:
+            return self.bootstrapped_error_locs
         out = []
         for i in range(BOOTSTRAP):
             error_locs = 0
@@ -108,6 +113,7 @@ class Results:
                 pexec = random.choice(pexecs)
                 error_locs += len(pexec.costs)
             out.append(error_locs)
+        self.bootstrapped_error_locs = out
         return out
 
     def bootstrap_costs(self):
@@ -139,7 +145,7 @@ def confidence_ratio_error_locs(x, y):
     return confidence_slice(out, "0.99")
 
 def mean(l):
-    return float(sum(l) / Decimal(len(l)))
+    return math.fsum(l) / float(len(l))
 
 def median(l):
     l.sort()
@@ -165,7 +171,10 @@ def process(latex_name, p):
                 assert s[3] == "0"
                 succeeded = False
             costs = [int(x) for x in s[4].split(":") if x != ""]
-            pexec = PExec(s[0], int(s[1]), Decimal(s[2]), succeeded, costs)
+            if succeeded and len(costs) == 0:
+                print "Warning: %s (pexec #%s) succeeded without parsing errors" % (s[0], s[1])
+                continue
+            pexec = PExec(s[0], int(s[1]), float(s[2]), succeeded, costs)
             max_run_num = max(max_run_num, pexec.run_num)
             pexecs.append(pexec)
 
@@ -246,9 +255,12 @@ def error_locs_histogram(run1, run2, p, zoom=None):
         bbins = [[] for _ in range(num_bins)]
         bin_width = max_error_locs / num_bins
         for _ in range(BOOTSTRAP):
-            d = [len(random.choice(pexecs).costs) for pexecs in run.pexecs]
-            if zoom is not None:
-                d = filter(lambda x: x <= zoom, d)
+            d = []
+            for pexecs in run.pexecs:
+                pexec = random.choice(pexecs)
+                if pexec.succeeded:
+                    if zoom is None or len(pexec.costs) <= zoom:
+                        d.append(len(pexec.costs))
             hbins, _ = histogram(d, bins=num_bins, range=(0, max_error_locs))
             for i, cnt in enumerate(hbins):
                 bbins[i].append(cnt)
@@ -307,13 +319,36 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     ax.yaxis.set_major_formatter(formatter)
     plt.savefig(p, format="pdf")
 
-decimal.getcontext().prec = 12
-cpctplus = process("\\cpctplus", "cpctplus.csv")
-mf = process("\\mf", "mf.csv")
-mfrev = process("\\mfrev", "mf_rev.csv")
-assert cpctplus.num_runs == mf.num_runs == mfrev.num_runs
-
 with open("experimentstats.tex", "w") as f:
+    # Loading in the CSV files and boostrapping consumes *lots* of memory (gigabytes), so we do it
+    # in an order that allows us to keep as few things in memory as we can.
+    cpctplus = process("\\cpctplus", "cpctplus.csv")
+    mf = process("\\mf", "mf.csv")
+
+    mf_cpctplus_ratio_ci = confidence_ratio_recovery_means(mf, cpctplus)
+    f.write(r"\newcommand{\mfcpctplusfailurerateratio}{%.1f\%%{\footnotesize$\pm$%.1f\%%}\xspace}" % \
+            (mf_cpctplus_ratio_ci.median, mf_cpctplus_ratio_ci.error))
+    f.write("\n")
+
+    # Flush some caches
+    mf.bootstrapped_recovery_means = None
+    cpctplus.bootstrapped_recovery_means = None
+
+    mfrev = process("\\mfrev", "mf_rev.csv")
+    assert cpctplus.num_runs == mf.num_runs == mfrev.num_runs
+    mfrev_mf_ratio_ci = confidence_ratio_error_locs(mfrev, mf)
+    f.write(r"\newcommand{\mfreverrorlocsratioovermf}{%.1f\%%{\footnotesize$\pm$%.2f\%%}\xspace}" % \
+            (mfrev_mf_ratio_ci.median, mfrev_mf_ratio_ci.error))
+    f.write("\n")
+
+    # Flush all caches
+    cpctplus.bootstrapped_recovery_means = None
+    cpctplus.bootstrapped_error_locs = None
+    mf.bootstrapped_recovery_means = None
+    mf.bootstrapped_error_locs = None
+    mfrev.bootstrapped_recovery_means = None
+    mfrev.bootstrapped_error_locs = None
+
     f.write(r"\newcommand{\numruns}{\numprint{%s}\xspace}" % str(cpctplus.num_runs))
     f.write("\n")
     f.write(r"\newcommand{\numbootstrap}{\numprint{%s}\xspace}" % str(BOOTSTRAP))
@@ -340,16 +375,6 @@ with open("experimentstats.tex", "w") as f:
                 (x.latex_name, x.error_locs_ci.median, x.error_locs_ci.error))
         f.write("\n")
 
-    mf_cpctplus_ratio_ci = confidence_ratio_recovery_means(mf, cpctplus)
-    f.write(r"\newcommand{\mfcpctplusfailurerateratio}{%.1f\%%{\footnotesize$\pm$%.1f\%%}\xspace}" % \
-            (mf_cpctplus_ratio_ci.median, mf_cpctplus_ratio_ci.error))
-    f.write("\n")
-
-    mfrev_mf_ratio_ci = confidence_ratio_error_locs(mfrev, mf)
-    f.write(r"\newcommand{\mfreverrorlocsratioovermf}{%.1f\%%{\footnotesize$\pm$%.2f\%%}\xspace}" % \
-            (mfrev_mf_ratio_ci.median, mfrev_mf_ratio_ci.error))
-    f.write("\n")
-
 with open("table.tex", "w") as f:
     for x in [cpctplus, mf, mfrev]:
         f.write("%s & %.4f{\scriptsize$\pm$%.5f} & %.6f{\scriptsize$\pm$%.7f} & %.2f{\scriptsize$\pm$%.3f}& %.2f{\scriptsize$\pm$%.3f} & \\numprint{%d}{\scriptsize$\pm$%s} \\\\\n" % \
@@ -367,5 +392,5 @@ print
 sys.stdout.write("Error locations histogram...")
 sys.stdout.flush()
 error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_full.pdf")
-error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_zoomed.pdf", zoom=75)
+error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_zoomed.pdf", zoom=50)
 print
