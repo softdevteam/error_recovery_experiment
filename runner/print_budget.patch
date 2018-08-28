@@ -1,7 +1,7 @@
-diff --git a/src/lib/astar.rs b/src/lib/astar.rs
-index c59fe84..43578c4 100644
---- a/src/lib/astar.rs
-+++ b/src/lib/astar.rs
+diff --git lrpar/src/lib/astar.rs lrpar/src/lib/astar.rs
+index 44a3711..53ca5ff 100644
+--- lrpar/src/lib/astar.rs
++++ lrpar/src/lib/astar.rs
 @@ -135,6 +135,7 @@ pub(crate) fn astar_all<N, FN, FM, FS>(start_node: N,
          }
      }
@@ -17,11 +17,11 @@ index c59fe84..43578c4 100644
 +    println!("repair cost {}", c);
      scs_nodes
  }
-diff --git a/src/lib/parser.rs b/src/lib/parser.rs
-index 3aaefac..0d9e041 100644
---- a/src/lib/parser.rs
-+++ b/src/lib/parser.rs
-@@ -163,6 +163,7 @@ impl<'a, TokId: PrimInt + Unsigned> Parser<'a, TokId> {
+diff --git lrpar/src/lib/parser.rs lrpar/src/lib/parser.rs
+index bd80ef2..8b21330 100644
+--- lrpar/src/lib/parser.rs
++++ lrpar/src/lib/parser.rs
+@@ -175,6 +175,7 @@ where usize: AsPrimitive<StorageT>
                  Some(Action::Accept) => {
                      debug_assert_eq!(la_tidx, self.grm.eof_term_idx());
                      debug_assert_eq!(tstack.len(), 1);
@@ -29,18 +29,18 @@ index 3aaefac..0d9e041 100644
                      return true;
                  },
                  None => {
-@@ -201,6 +202,7 @@ impl<'a, TokId: PrimInt + Unsigned> Parser<'a, TokId> {
+@@ -212,6 +213,7 @@ where usize: AsPrimitive<StorageT>
                      errors.push(ParseError{state_idx: st, lexeme_idx: la_idx,
-                                            lexeme: la_lexeme, repairs: repairs});
+                                            lexeme: la_lexeme, repairs});
                      if !keep_going {
 +                        println!("recovery budget {:?}", recovery_budget.as_secs() as f64 + recovery_budget.subsec_nanos() as f64 * 1e-9);
                          return false;
                      }
                      la_idx = new_la_idx;
-diff --git a/src/main.rs b/src/main.rs
-index 0c71440..387710f 100644
---- a/src/main.rs
-+++ b/src/main.rs
+diff --git lrpar/src/main.rs lrpar/src/main.rs
+index 6ac63ce..ebc313e 100644
+--- lrpar/src/main.rs
++++ lrpar/src/main.rs
 @@ -185,10 +185,12 @@ fn main() {
      match parse_rcvry::<u16, _>(recoverykind, &grm, &term_cost, &sgraph, &stable, &lexemes) {
          Ok(pt) => println!("{}", pt.pp(&grm, &input)),

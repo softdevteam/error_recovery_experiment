@@ -10,7 +10,7 @@ RE_RECOVERY_POINTS = re.compile("^Error at line", re.MULTILINE)
 BUDGET = 0.5
 PEXECS = 30
 
-src_files, binary, recoverer, yaccp, lexp, outp = sys.argv[1:7]
+src_files, binary, outp = sys.argv[1:4]
 
 assert not os.path.exists(outp)
 
@@ -29,7 +29,7 @@ with open(outp, "w") as outf:
                 time.sleep(10)
             p = os.path.join(src_files, l)
             with TemporaryFile() as tmpf:
-                lrpar = Popen([binary, "-r", recoverer, yaccp, lexp, p], stdout=tmpf)
+                lrpar = Popen([binary, p], stdout=tmpf)
                 lrpar.wait()
                 tmpf.seek(0, os.SEEK_SET)
                 output = tmpf.read()
