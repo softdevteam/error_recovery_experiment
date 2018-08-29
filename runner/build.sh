@@ -57,6 +57,17 @@ if [ ! -f java_parser_mf_rev ]; then
     cd ..
 fi
 
+if [ ! -f java_parser_none ]; then
+    cd grmtools
+    git reset --hard
+    cd ../java_parser
+    sed -Ei "s/RecoveryKind::.*?[)]/RecoveryKind::None)/" build.rs
+    rm -rf target
+    cargo build --release
+    cp target/release/java_parser ../java_parser_none
+    cd ..
+fi
+
 if [ ! -f java_parser_panic ]; then
     cd grmtools
     git reset --hard
