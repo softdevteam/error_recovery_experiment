@@ -31,12 +31,16 @@ class PExec:
                  run_num,
                  recovery_time,
                  succeeded,
-                 costs):
+                 costs,
+                 num_lexemes,
+                 num_lexemes_skipped):
         self.name = name
         self.run_num = run_num
         self.recovery_time = recovery_time
         self.succeeded = succeeded
         self.costs = costs
+        self.num_lexemes = num_lexemes
+        self.num_lexemes_skipped = num_lexemes_skipped
 
 class Results:
     def __init__(self,
@@ -68,7 +72,9 @@ class Results:
             sys.stdout.write(" costs...")
             sys.stdout.flush()
             self.costs_ci = confidence_slice(self.bootstrap_costs(), "0.99")
-        print
+        sys.stdout.write(" input skipped...")
+        sys.stdout.flush()
+        self.input_skipped_ci = confidence_slice(self.bootstrap_input_skipped(), "0.99")
 
     def bootstrap_recovery_means(self):
         if self.bootstrapped_recovery_means:
@@ -129,6 +135,17 @@ class Results:
                 out.append(mean(costs))
         return out
 
+    def bootstrap_input_skipped(self):
+        out = []
+        for i in range(BOOTSTRAP):
+            num_lexemes = num_lexemes_skipped = 0
+            for pexecs in self.pexecs:
+                pexec = random.choice(pexecs)
+                num_lexemes += pexec.num_lexemes
+                num_lexemes_skipped += pexec.num_lexemes_skipped
+            out.append((float(num_lexemes_skipped) / float(num_lexemes)) * 100.0)
+        return out
+
 def confidence_ratio_recovery_means(x, y):
     xmeans = x.bootstrap_recovery_means()
     ymeans = y.bootstrap_recovery_means()
@@ -175,7 +192,7 @@ def process(latex_name, p):
             if latex_name != "\\panic" and succeeded and len(costs) == 0:
                 print "Warning: %s (pexec #%s) succeeded without parsing errors" % (s[0], s[1])
                 continue
-            pexec = PExec(s[0], int(s[1]), float(s[2]), succeeded, costs)
+            pexec = PExec(s[0], int(s[1]), float(s[2]), succeeded, costs, int(s[5]), int(s[6]))
             max_run_num = max(max_run_num, pexec.run_num)
             pexecs.append(pexec)
 
@@ -382,18 +399,32 @@ with open("experimentstats.tex", "w") as f:
         f.write("\n")
 
 with open("table.tex", "w") as f:
-    for x in [cpctplus, mf, mfrev, panic]:
+    for x in [panic, cpctplus, mf, mfrev]:
         if x.latex_name == "\\panic":
-            costs = "-"
+            costs_median = "-"
+            costs_ci = ""
         else:
-            costs = "%.2f{\scriptsize$\pm$%.3f}" % (x.costs_ci.median, x.costs_ci.error)
-        f.write("%s & %.6f{\scriptsize$\pm$%.7f} & %.6f{\scriptsize$\pm$%.7f} & %s & %.2f{\scriptsize$\pm$%.3f} & \\numprint{%d}{\scriptsize$\pm$%s} \\\\\n" % \
+            costs_median = "%.2f" % x.costs_ci.median
+            costs_ci = "{\scriptsize$\pm$%.3f}" % x.costs_ci.error
+            print x.costs_ci
+        f.write("%s & %.6f & %.6f & %s & %.2f & \\numprint{%d} & %.2f \\\\[-4pt]\n" % \
                 (x.latex_name, \
-                 x.recovery_time_mean_ci.median, x.recovery_time_mean_ci.error, \
-                 x.recovery_time_median_ci.median, x.recovery_time_median_ci.error, \
-                 costs, \
-                 x.failure_rate_ci.median, x.failure_rate_ci.error, \
-                 x.error_locs_ci.median, int(x.error_locs_ci.error)))
+                 x.recovery_time_mean_ci.median, \
+                 x.recovery_time_median_ci.median, \
+                 costs_median, \
+                 x.failure_rate_ci.median, \
+                 x.error_locs_ci.median, \
+                 x.input_skipped_ci.median))
+        f.write("%s & {\scriptsize$\pm$%.7f} & {\scriptsize$\pm$%.7f} & %s & {\scriptsize$\pm$%.3f} & {\scriptsize$\pm$%s} & {\scriptsize$\pm$%.3f}\\\\\n" % \
+                (" " * len(x.latex_name), \
+                 x.recovery_time_mean_ci.error, \
+                 x.recovery_time_median_ci.error, \
+                 costs_ci, \
+                 x.failure_rate_ci.error, \
+                 int(x.error_locs_ci.error),
+                 x.input_skipped_ci.error))
+        if x.latex_name == "\\panic":
+            f.write("\midrule\n")
 
 sys.stdout.write("Time histograms...")
 sys.stdout.flush()

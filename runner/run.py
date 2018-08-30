@@ -7,6 +7,8 @@ from tempfile import TemporaryFile
 RE_BUDGET = re.compile("^recovery budget ([0-9.]+)", re.MULTILINE)
 RE_COST = re.compile("^repair cost ([0-9.]+)", re.MULTILINE)
 RE_RECOVERY_POINTS = re.compile("^Error at line", re.MULTILINE)
+RE_LEXEME_COUNT = re.compile("^Lexeme count: ([0-9]+)", re.MULTILINE)
+RE_SKIPPED = re.compile("^Input skipped: ([0-9]+)", re.MULTILINE)
 BUDGET = 0.5
 PEXECS = 30
 
@@ -36,25 +38,35 @@ with open(outp, "w") as outf:
                 m = RE_BUDGET.search(output)
                 remaining = float(m.group(1))
                 spent = BUDGET - remaining
-                if "No repairs found" in output:
+                if "Parsing did not complete" in output:
                     failures += 1
                     f = "0"
                     costs = ""
                 else:
                     f = "1"
-                    costs_l = []
-                    for m in RE_COST.finditer(output):
-                        costs_l.append(m.group(1))
-                    assert(len(costs_l) == len(list(RE_RECOVERY_POINTS.finditer(output))))
-                    costs = ":".join(costs_l)
+                    if binary == "java_parser_panic":
+                        costs = ":".join(["1"] * len(list(RE_RECOVERY_POINTS.finditer(output))))
+                    else:
+                        costs_l = []
+                        for m in RE_COST.finditer(output):
+                            costs_l.append(m.group(1))
+                        assert(len(costs_l) == len(list(RE_RECOVERY_POINTS.finditer(output))))
+                        costs = ":".join(costs_l)
+
+                lexeme_count = RE_LEXEME_COUNT.search(output).group(1)
+                skipped = RE_SKIPPED.search(output).group(1)
                 # CSV fields, in order:
-                #   bench name,
-                #   run number,
+                #   bench name
+                #   run number
                 #   time spent recovering (secs)
                 #   succeeded recovering (0: failed, 1: succeeded)
                 #   cost of each repair point found (separated by ":" and only
-                #                                    meaningful if succeeded recovering == 1)
-                outf.write("%s, %s, %.10f, %s, %s\n" % (l, j, spent, f, costs))
+                #     meaningful if succeeded recovering == 1)
+                #   number of lexemes in file
+                #   number of lexemes not parsed (either because of Del repairs, or because
+                #     the recoverer could not repair the remainder of a file)
+                outf.write("%s, %s, %.10f, %s, %s, %s, %s\n" %
+                           (l, j, spent, f, costs, lexeme_count, skipped))
                 outf.flush()
                 times.append(spent)
 
