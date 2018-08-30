@@ -407,22 +407,22 @@ with open("table.tex", "w") as f:
             costs_median = "%.2f" % x.costs_ci.median
             costs_ci = "{\scriptsize$\pm$%.3f}" % x.costs_ci.error
             print x.costs_ci
-        f.write("%s & %.6f & %.6f & %s & %.2f & \\numprint{%d} & %.2f \\\\[-4pt]\n" % \
+        f.write("%s & %.6f & %.6f & %s & %.2f & %.2f & \\numprint{%d} \\\\[-4pt]\n" % \
                 (x.latex_name, \
                  x.recovery_time_mean_ci.median, \
                  x.recovery_time_median_ci.median, \
                  costs_median, \
                  x.failure_rate_ci.median, \
-                 x.error_locs_ci.median, \
-                 x.input_skipped_ci.median))
-        f.write("%s & {\scriptsize$\pm$%.7f} & {\scriptsize$\pm$%.7f} & %s & {\scriptsize$\pm$%.3f} & {\scriptsize$\pm$%s} & {\scriptsize$\pm$%.3f}\\\\\n" % \
+                 x.input_skipped_ci.median, \
+                 x.error_locs_ci.median))
+        f.write("%s & {\scriptsize$\pm$%.7f} & {\scriptsize$\pm$%.7f} & %s & {\scriptsize$\pm$%.3f} & {\scriptsize$\pm$%.3f} & {\scriptsize$\pm$%s}\\\\\n" % \
                 (" " * len(x.latex_name), \
                  x.recovery_time_mean_ci.error, \
                  x.recovery_time_median_ci.error, \
                  costs_ci, \
                  x.failure_rate_ci.error, \
-                 int(x.error_locs_ci.error),
-                 x.input_skipped_ci.error))
+                 x.input_skipped_ci.error, \
+                 int(x.error_locs_ci.error)))
         if x.latex_name == "\\panic":
             f.write("\midrule\n")
 
