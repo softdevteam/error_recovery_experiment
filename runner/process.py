@@ -64,9 +64,10 @@ class Results:
         sys.stdout.write(" error locations...")
         sys.stdout.flush()
         self.error_locs_ci = confidence_slice(self.bootstrap_error_locs(), "0.99")
-        sys.stdout.write(" costs...")
-        sys.stdout.flush()
-        self.costs_ci = confidence_slice(self.bootstrap_costs(), "0.99")
+        if latex_name != "\\panic":
+            sys.stdout.write(" costs...")
+            sys.stdout.flush()
+            self.costs_ci = confidence_slice(self.bootstrap_costs(), "0.99")
         print
 
     def bootstrap_recovery_means(self):
@@ -171,7 +172,7 @@ def process(latex_name, p):
                 assert s[3] == "0"
                 succeeded = False
             costs = [int(x) for x in s[4].split(":") if x != ""]
-            if succeeded and len(costs) == 0:
+            if latex_name != "\\panic" and succeeded and len(costs) == 0:
                 print "Warning: %s (pexec #%s) succeeded without parsing errors" % (s[0], s[1])
                 continue
             pexec = PExec(s[0], int(s[1]), float(s[2]), succeeded, costs)
@@ -341,6 +342,9 @@ with open("experimentstats.tex", "w") as f:
             (mfrev_mf_ratio_ci.median, mfrev_mf_ratio_ci.error))
     f.write("\n")
 
+    panic = process("\\panic", "panic.csv")
+    assert cpctplus.num_runs == mf.num_runs == mfrev.num_runs == panic.num_runs
+
     # Flush all caches
     cpctplus.bootstrapped_recovery_means = None
     cpctplus.bootstrapped_error_locs = None
@@ -348,6 +352,8 @@ with open("experimentstats.tex", "w") as f:
     mf.bootstrapped_error_locs = None
     mfrev.bootstrapped_recovery_means = None
     mfrev.bootstrapped_error_locs = None
+    panic.bootstrapped_recovery_means = None
+    panic.bootstrapped_error_locs = None
 
     f.write(r"\newcommand{\numruns}{\numprint{%s}\xspace}" % str(cpctplus.num_runs))
     f.write("\n")
@@ -358,7 +364,7 @@ with open("experimentstats.tex", "w") as f:
     f.write("\n")
     f.write(r"\newcommand{\corpussizemb}{\numprint{%s}\xspace}" % str(size_bytes / 1024 / 1024))
     f.write("\n")
-    for x in [cpctplus, mf, mfrev]:
+    for x in [cpctplus, mf, mfrev, panic]:
         f.write(r"\newcommand{%ssuccessrate}{%.2f\%%{\footnotesize$\pm$%.2f\%%}\xspace}" % \
                 (x.latex_name, 100.0 - x.failure_rate_ci.median, x.failure_rate_ci.error))
         f.write("\n")
@@ -376,21 +382,43 @@ with open("experimentstats.tex", "w") as f:
         f.write("\n")
 
 with open("table.tex", "w") as f:
-    for x in [cpctplus, mf, mfrev]:
-        f.write("%s & %.4f{\scriptsize$\pm$%.5f} & %.6f{\scriptsize$\pm$%.7f} & %.2f{\scriptsize$\pm$%.3f}& %.2f{\scriptsize$\pm$%.3f} & \\numprint{%d}{\scriptsize$\pm$%s} \\\\\n" % \
+    for x in [cpctplus, mf, mfrev, panic]:
+        if x.latex_name == "\\panic":
+            costs = "-"
+        else:
+            costs = "%.2f{\scriptsize$\pm$%.3f}" % (x.costs_ci.median, x.costs_ci.error)
+        f.write("%s & %.6f{\scriptsize$\pm$%.7f} & %.6f{\scriptsize$\pm$%.7f} & %s & %.2f{\scriptsize$\pm$%.3f} & \\numprint{%d}{\scriptsize$\pm$%s} \\\\\n" % \
                 (x.latex_name, \
                  x.recovery_time_mean_ci.median, x.recovery_time_mean_ci.error, \
                  x.recovery_time_median_ci.median, x.recovery_time_median_ci.error, \
-                 x.costs_ci.median, x.costs_ci.error, \
+                 costs, \
                  x.failure_rate_ci.median, x.failure_rate_ci.error, \
                  x.error_locs_ci.median, int(x.error_locs_ci.error)))
 
-sys.stdout.write("MF histogram...")
+sys.stdout.write("Time histograms...")
+sys.stdout.flush()
+time_histogram(cpctplus, "cpctplus_histogram.pdf")
+sys.stdout.write(" cpctplus")
 sys.stdout.flush()
 time_histogram(mf, "mf_histogram.pdf")
+sys.stdout.write(" mf")
+sys.stdout.flush()
+time_histogram(mfrev, "mfrev_histogram.pdf")
+sys.stdout.write(" mfrev")
+sys.stdout.flush()
+time_histogram(panic, "panic_histogram.pdf")
+sys.stdout.write(" panic")
+sys.stdout.flush()
 print
 sys.stdout.write("Error locations histogram...")
 sys.stdout.flush()
 error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_full.pdf")
+sys.stdout.write(" mf/mfrev full")
+sys.stdout.flush()
 error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_zoomed.pdf", zoom=50)
+sys.stdout.write(" mf/mfrev zoomed")
+sys.stdout.flush()
+error_locs_histogram(mf, panic, "mf_panic_error_locs_histogram_full.pdf")
+sys.stdout.write(" mf/panic full")
+sys.stdout.flush()
 print
