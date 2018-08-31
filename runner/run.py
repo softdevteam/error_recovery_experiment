@@ -26,7 +26,7 @@ with open(outp, "w") as outf:
             if i % 100 == 0:
                 sys.stdout.write(".")
                 sys.stdout.flush()
-            if i % 1000 == 0:
+            if i % 10000 == 0:
                 # Let the machine have a chance to cool down every so often
                 time.sleep(10)
             p = os.path.join(src_files, l)
