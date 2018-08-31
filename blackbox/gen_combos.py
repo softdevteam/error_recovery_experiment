@@ -50,7 +50,7 @@ cnx = mysql.connector.connect(user="",
                               host="127.0.0.1",
                               db="blackbox_production")
 
-q = Queue(16)
+q = Queue(GENERATE * 10)
 with open("combos", "w") as f:
     generated = AtomicInt(0)
     class Worker(Thread):
@@ -108,10 +108,8 @@ with open("combos", "w") as f:
         w.start()
 
     for r1 in c1:
-        if generated.val() < GENERATE:
-            try:
-                q.put(r1, block=True)
-            except Full:
-                continue
+        if generated.val() == GENERATE:
+            break
+        q.put(r1, block=True)
 
     print
