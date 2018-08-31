@@ -50,7 +50,7 @@ cnx = mysql.connector.connect(user="",
                               host="127.0.0.1",
                               db="blackbox_production")
 
-q = Queue(64)
+q = Queue(GENERATE * 10)
 with open("combos", "w") as f:
     generated = AtomicInt(0)
     class Worker(Thread):
@@ -68,12 +68,12 @@ with open("combos", "w") as f:
                         q.task_done()
                         continue
 
-                rtn = os.system("lrlex/target/release/lrlex grammars/java7/java.l %s > /dev/null 2> /dev/null" % tfp)
+                rtn = os.system("grmtools/target/release/lrlex grammars/java7/java.l %s > /dev/null 2> /dev/null" % tfp)
                 if rtn != 0:
                     q.task_done()
                     continue
-                rtn = os.system("lrpar/target/release/lrpar -r none grammars/java7/java.l grammars/java7/java.y %s > /dev/null 2> /dev/null" % tfp)
-                if rtn == 0:
+                out = subprocess.check_output(["../runner/java_parser_none", tfp])
+                if "Parsed successfully" in out:
                     q.task_done()
                     continue
 
@@ -108,10 +108,8 @@ with open("combos", "w") as f:
         w.start()
 
     for r1 in c1:
-        if generated.val() < GENERATE:
-            try:
-                q.put(r1, timeout=1)
-            except Full:
-                continue
+        if generated.val() == GENERATE:
+            break
+        q.put(r1, block=True)
 
     print

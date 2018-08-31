@@ -2,6 +2,11 @@
 
 set -e
 
-./run.py src_files lrpar/target/release/lrpar cpctplus grammars/java7/java.l grammars/java7/java.y cpctplus.csv
-./run.py src_files lrpar/target/release/lrpar mf grammars/java7/java.l grammars/java7/java.y mf.csv
-./run.py src_files lrpar_rev/target/release/lrpar mf grammars/java7/java.l grammars/java7/java.y mf_rev.csv
+echo "===> cpctplus"
+./run.py src_files java_parser_cpctplus cpctplus.csv
+echo "===> mf"
+./run.py src_files java_parser_mf mf.csv
+echo "===> mf_rev"
+./run.py src_files java_parser_mf_rev mf_rev.csv
+echo "===> panic"
+./run.py src_files java_parser_panic panic.csv

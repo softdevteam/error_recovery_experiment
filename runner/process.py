@@ -31,12 +31,18 @@ class PExec:
                  run_num,
                  recovery_time,
                  succeeded,
-                 costs):
+                 error_locs,
+                 costs,
+                 num_lexemes,
+                 num_lexemes_skipped):
         self.name = name
         self.run_num = run_num
         self.recovery_time = recovery_time
         self.succeeded = succeeded
+        self.error_locs = error_locs
         self.costs = costs
+        self.num_lexemes = num_lexemes
+        self.num_lexemes_skipped = num_lexemes_skipped
 
 class Results:
     def __init__(self,
@@ -64,9 +70,13 @@ class Results:
         sys.stdout.write(" error locations...")
         sys.stdout.flush()
         self.error_locs_ci = confidence_slice(self.bootstrap_error_locs(), "0.99")
-        sys.stdout.write(" costs...")
+        if latex_name != "\\panic":
+            sys.stdout.write(" costs...")
+            sys.stdout.flush()
+            self.costs_ci = confidence_slice(self.bootstrap_costs(), "0.99")
+        sys.stdout.write(" input skipped...")
         sys.stdout.flush()
-        self.costs_ci = confidence_slice(self.bootstrap_costs(), "0.99")
+        self.input_skipped_ci = confidence_slice(self.bootstrap_input_skipped(), "0.99")
         print
 
     def bootstrap_recovery_means(self):
@@ -111,7 +121,7 @@ class Results:
             error_locs = 0
             for pexecs in self.pexecs:
                 pexec = random.choice(pexecs)
-                error_locs += len(pexec.costs)
+                error_locs += pexec.error_locs
             out.append(error_locs)
         self.bootstrapped_error_locs = out
         return out
@@ -126,6 +136,17 @@ class Results:
                     costs.extend(pexec.costs)
             if len(costs) > 0:
                 out.append(mean(costs))
+        return out
+
+    def bootstrap_input_skipped(self):
+        out = []
+        for i in range(BOOTSTRAP):
+            num_lexemes = num_lexemes_skipped = 0
+            for pexecs in self.pexecs:
+                pexec = random.choice(pexecs)
+                num_lexemes += pexec.num_lexemes
+                num_lexemes_skipped += pexec.num_lexemes_skipped
+            out.append((float(num_lexemes_skipped) / float(num_lexemes)) * 100.0)
         return out
 
 def confidence_ratio_recovery_means(x, y):
@@ -170,11 +191,11 @@ def process(latex_name, p):
             else:
                 assert s[3] == "0"
                 succeeded = False
-            costs = [int(x) for x in s[4].split(":") if x != ""]
-            if succeeded and len(costs) == 0:
+            costs = [int(x) for x in s[5].split(":") if x != ""]
+            if latex_name != "\\panic" and succeeded and len(costs) == 0:
                 print "Warning: %s (pexec #%s) succeeded without parsing errors" % (s[0], s[1])
                 continue
-            pexec = PExec(s[0], int(s[1]), float(s[2]), succeeded, costs)
+            pexec = PExec(s[0], int(s[1]), float(s[2]), succeeded, int(s[4]), costs, int(s[6]), int(s[7]))
             max_run_num = max(max_run_num, pexec.run_num)
             pexecs.append(pexec)
 
@@ -341,6 +362,9 @@ with open("experimentstats.tex", "w") as f:
             (mfrev_mf_ratio_ci.median, mfrev_mf_ratio_ci.error))
     f.write("\n")
 
+    panic = process("\\panic", "panic.csv")
+    assert cpctplus.num_runs == mf.num_runs == mfrev.num_runs == panic.num_runs
+
     # Flush all caches
     cpctplus.bootstrapped_recovery_means = None
     cpctplus.bootstrapped_error_locs = None
@@ -348,6 +372,8 @@ with open("experimentstats.tex", "w") as f:
     mf.bootstrapped_error_locs = None
     mfrev.bootstrapped_recovery_means = None
     mfrev.bootstrapped_error_locs = None
+    panic.bootstrapped_recovery_means = None
+    panic.bootstrapped_error_locs = None
 
     f.write(r"\newcommand{\numruns}{\numprint{%s}\xspace}" % str(cpctplus.num_runs))
     f.write("\n")
@@ -358,7 +384,7 @@ with open("experimentstats.tex", "w") as f:
     f.write("\n")
     f.write(r"\newcommand{\corpussizemb}{\numprint{%s}\xspace}" % str(size_bytes / 1024 / 1024))
     f.write("\n")
-    for x in [cpctplus, mf, mfrev]:
+    for x in [cpctplus, mf, mfrev, panic]:
         f.write(r"\newcommand{%ssuccessrate}{%.2f\%%{\footnotesize$\pm$%.2f\%%}\xspace}" % \
                 (x.latex_name, 100.0 - x.failure_rate_ci.median, x.failure_rate_ci.error))
         f.write("\n")
@@ -376,21 +402,57 @@ with open("experimentstats.tex", "w") as f:
         f.write("\n")
 
 with open("table.tex", "w") as f:
-    for x in [cpctplus, mf, mfrev]:
-        f.write("%s & %.4f{\scriptsize$\pm$%.5f} & %.6f{\scriptsize$\pm$%.7f} & %.2f{\scriptsize$\pm$%.3f}& %.2f{\scriptsize$\pm$%.3f} & \\numprint{%d}{\scriptsize$\pm$%s} \\\\\n" % \
+    for x in [panic, cpctplus, mf, mfrev]:
+        if x.latex_name == "\\panic":
+            costs_median = "-"
+            costs_ci = ""
+        else:
+            costs_median = "%.2f" % x.costs_ci.median
+            costs_ci = "{\scriptsize$\pm$%.3f}" % x.costs_ci.error
+            print x.costs_ci
+        f.write("%s & %.6f & %.6f & %s & %.2f & %.2f & \\numprint{%d} \\\\[-4pt]\n" % \
                 (x.latex_name, \
-                 x.recovery_time_mean_ci.median, x.recovery_time_mean_ci.error, \
-                 x.recovery_time_median_ci.median, x.recovery_time_median_ci.error, \
-                 x.costs_ci.median, x.costs_ci.error, \
-                 x.failure_rate_ci.median, x.failure_rate_ci.error, \
-                 x.error_locs_ci.median, int(x.error_locs_ci.error)))
+                 x.recovery_time_mean_ci.median, \
+                 x.recovery_time_median_ci.median, \
+                 costs_median, \
+                 x.failure_rate_ci.median, \
+                 x.input_skipped_ci.median, \
+                 x.error_locs_ci.median))
+        f.write("%s & {\scriptsize$\pm$%.7f} & {\scriptsize$\pm$%.7f} & %s & {\scriptsize$\pm$%.3f} & {\scriptsize$\pm$%.3f} & {\scriptsize$\pm$%s}\\\\\n" % \
+                (" " * len(x.latex_name), \
+                 x.recovery_time_mean_ci.error, \
+                 x.recovery_time_median_ci.error, \
+                 costs_ci, \
+                 x.failure_rate_ci.error, \
+                 x.input_skipped_ci.error, \
+                 int(x.error_locs_ci.error)))
+        if x.latex_name == "\\panic":
+            f.write("\midrule\n")
 
-sys.stdout.write("MF histogram...")
+sys.stdout.write("Time histograms...")
+sys.stdout.flush()
+time_histogram(cpctplus, "cpctplus_histogram.pdf")
+sys.stdout.write(" cpctplus")
 sys.stdout.flush()
 time_histogram(mf, "mf_histogram.pdf")
+sys.stdout.write(" mf")
+sys.stdout.flush()
+time_histogram(mfrev, "mfrev_histogram.pdf")
+sys.stdout.write(" mfrev")
+sys.stdout.flush()
+time_histogram(panic, "panic_histogram.pdf")
+sys.stdout.write(" panic")
+sys.stdout.flush()
 print
 sys.stdout.write("Error locations histogram...")
 sys.stdout.flush()
 error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_full.pdf")
+sys.stdout.write(" mf/mfrev full")
+sys.stdout.flush()
 error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_zoomed.pdf", zoom=50)
+sys.stdout.write(" mf/mfrev zoomed")
+sys.stdout.flush()
+error_locs_histogram(mf, panic, "mf_panic_error_locs_histogram_full.pdf")
+sys.stdout.write(" mf/panic full")
+sys.stdout.flush()
 print
