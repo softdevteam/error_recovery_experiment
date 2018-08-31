@@ -41,18 +41,18 @@ with open(outp, "w") as outf:
                 if "Parsing did not complete" in output:
                     failures += 1
                     f = "0"
-                    costs = ""
                 else:
                     f = "1"
-                    if binary == "java_parser_panic":
-                        costs = ":".join(["1"] * len(list(RE_RECOVERY_POINTS.finditer(output))))
-                    else:
-                        costs_l = []
-                        for m in RE_COST.finditer(output):
-                            costs_l.append(m.group(1))
-                        assert(len(costs_l) == len(list(RE_RECOVERY_POINTS.finditer(output))))
-                        costs = ":".join(costs_l)
 
+                if binary == "java_parser_panic":
+                    costs = ""
+                else:
+                    costs_l = []
+                    for m in RE_COST.finditer(output):
+                        costs_l.append(m.group(1))
+                    costs = ":".join(costs_l)
+
+                error_locs = len(list(RE_RECOVERY_POINTS.finditer(output)))
                 lexeme_count = RE_LEXEME_COUNT.search(output).group(1)
                 skipped = RE_SKIPPED.search(output).group(1)
                 # CSV fields, in order:
@@ -60,13 +60,14 @@ with open(outp, "w") as outf:
                 #   run number
                 #   time spent recovering (secs)
                 #   succeeded recovering (0: failed, 1: succeeded)
+                #   number of error locations
                 #   cost of each repair point found (separated by ":" and only
                 #     meaningful if succeeded recovering == 1)
                 #   number of lexemes in file
                 #   number of lexemes not parsed (either because of Del repairs, or because
                 #     the recoverer could not repair the remainder of a file)
-                outf.write("%s, %s, %.10f, %s, %s, %s, %s\n" %
-                           (l, j, spent, f, costs, lexeme_count, skipped))
+                outf.write("%s, %s, %.10f, %s, %s, %s, %s, %s\n" %
+                           (l, j, spent, f, error_locs, costs, lexeme_count, skipped))
                 outf.flush()
                 times.append(spent)
 

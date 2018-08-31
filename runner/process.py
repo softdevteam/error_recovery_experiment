@@ -31,6 +31,7 @@ class PExec:
                  run_num,
                  recovery_time,
                  succeeded,
+                 error_locs,
                  costs,
                  num_lexemes,
                  num_lexemes_skipped):
@@ -38,6 +39,7 @@ class PExec:
         self.run_num = run_num
         self.recovery_time = recovery_time
         self.succeeded = succeeded
+        self.error_locs = error_locs
         self.costs = costs
         self.num_lexemes = num_lexemes
         self.num_lexemes_skipped = num_lexemes_skipped
@@ -75,6 +77,7 @@ class Results:
         sys.stdout.write(" input skipped...")
         sys.stdout.flush()
         self.input_skipped_ci = confidence_slice(self.bootstrap_input_skipped(), "0.99")
+        print
 
     def bootstrap_recovery_means(self):
         if self.bootstrapped_recovery_means:
@@ -118,7 +121,7 @@ class Results:
             error_locs = 0
             for pexecs in self.pexecs:
                 pexec = random.choice(pexecs)
-                error_locs += len(pexec.costs)
+                error_locs += pexec.error_locs
             out.append(error_locs)
         self.bootstrapped_error_locs = out
         return out
@@ -188,11 +191,11 @@ def process(latex_name, p):
             else:
                 assert s[3] == "0"
                 succeeded = False
-            costs = [int(x) for x in s[4].split(":") if x != ""]
+            costs = [int(x) for x in s[5].split(":") if x != ""]
             if latex_name != "\\panic" and succeeded and len(costs) == 0:
                 print "Warning: %s (pexec #%s) succeeded without parsing errors" % (s[0], s[1])
                 continue
-            pexec = PExec(s[0], int(s[1]), float(s[2]), succeeded, costs, int(s[5]), int(s[6]))
+            pexec = PExec(s[0], int(s[1]), float(s[2]), succeeded, int(s[4]), costs, int(s[6]), int(s[7]))
             max_run_num = max(max_run_num, pexec.run_num)
             pexecs.append(pexec)
 
