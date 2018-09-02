@@ -102,14 +102,25 @@ with open("combos", "w") as f:
                   ORDER BY RAND()
                """)
 
+    workers = []
     for _ in range(12):
         w = Worker()
         w.daemon = True
+        workers.append(w)
         w.start()
 
-    for r1 in c1:
-        if generated.val() == GENERATE:
-            break
-        q.put(r1, block=True)
+    try:
+        for r1 in c1:
+            if generated.val() == GENERATE:
+                break
+            q.put(r1, block=True)
+    except Exception, e:
+        print e
+
+    for w in workers:
+        w.join()
+
+    if generated.val() < GENERATE:
+        sys.stderr.write("WARNING: exception happened before combos file is complete")
 
     print
