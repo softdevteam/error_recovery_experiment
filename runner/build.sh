@@ -20,6 +20,10 @@ if [ ! -d grammars ]; then
     cp grammars/java7/java.y java_parser/src/java7.y
 fi
 
+if [ ! -f java_parser/Cargo.lock ]; then
+    cp java_parser.Cargo.lock java_parser/Cargo.lock
+fi
+
 if [ ! -f java_parser_cpctplus ]; then
     cd grmtools
     git reset --hard
