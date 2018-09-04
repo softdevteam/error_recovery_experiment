@@ -409,7 +409,6 @@ with open("table.tex", "w") as f:
         else:
             costs_median = "%.2f" % x.costs_ci.median
             costs_ci = "{\scriptsize$\pm$%.3f}" % x.costs_ci.error
-            print x.costs_ci
         f.write("%s & %.6f & %.6f & %s & %.2f & %.2f & \\numprint{%d} \\\\[-4pt]\n" % \
                 (x.latex_name, \
                  x.recovery_time_mean_ci.median, \
