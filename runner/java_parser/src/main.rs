@@ -35,7 +35,6 @@ fn main() {
             }
             if pt.is_none() {
                 println!("Parsing did not complete");
-                skipped += lexemes.len() - errs[errs.len() - 1].lexeme_idx();
             }
         }
     }
