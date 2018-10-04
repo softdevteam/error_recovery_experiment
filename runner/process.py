@@ -340,6 +340,14 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     ax.yaxis.set_major_formatter(formatter)
     plt.savefig(p, format="pdf")
 
+def ci_pp(ci, dp):
+    s = (("%." + str(dp) + "f") % ci).split(".")[1]
+    for c in s:
+        if c != "0":
+            return ("%." + str(dp) + "f") % ci
+    return "<0.%s1" % ("0" * (dp - 1))
+
+
 with open("experimentstats.tex", "w") as f:
     # Loading in the CSV files and boostrapping consumes *lots* of memory (gigabytes), so we do it
     # in an order that allows us to keep as few things in memory as we can.
@@ -347,8 +355,8 @@ with open("experimentstats.tex", "w") as f:
     mf = process("\\mf", "mf.csv")
 
     mf_cpctplus_ratio_ci = confidence_ratio_recovery_means(mf, cpctplus)
-    f.write(r"\newcommand{\mfcpctplusfailurerateratio}{%.1f\%%{\footnotesize$\pm$%.1f\%%}\xspace}" % \
-            (mf_cpctplus_ratio_ci.median, mf_cpctplus_ratio_ci.error))
+    f.write(r"\newcommand{\mfcpctplusfailurerateratio}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
+            (mf_cpctplus_ratio_ci.median, ci_pp(mf_cpctplus_ratio_ci.error, 3)))
     f.write("\n")
 
     # Flush some caches
@@ -358,8 +366,8 @@ with open("experimentstats.tex", "w") as f:
     mfrev = process("\\mfrev", "mf_rev.csv")
     assert cpctplus.num_runs == mf.num_runs == mfrev.num_runs
     mfrev_mf_ratio_ci = confidence_ratio_error_locs(mfrev, mf)
-    f.write(r"\newcommand{\mfreverrorlocsratioovermf}{%.1f\%%{\footnotesize$\pm$%.2f\%%}\xspace}" % \
-            (mfrev_mf_ratio_ci.median, mfrev_mf_ratio_ci.error))
+    f.write(r"\newcommand{\mfreverrorlocsratioovermf}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
+            (mfrev_mf_ratio_ci.median, ci_pp(mfrev_mf_ratio_ci.error, 3)))
     f.write("\n")
 
     panic = process("\\panic", "panic.csv")
@@ -385,17 +393,17 @@ with open("experimentstats.tex", "w") as f:
     f.write(r"\newcommand{\corpussizemb}{\numprint{%s}\xspace}" % str(size_bytes / 1024 / 1024))
     f.write("\n")
     for x in [cpctplus, mf, mfrev, panic]:
-        f.write(r"\newcommand{%ssuccessrate}{%.2f\%%{\footnotesize$\pm$%.2f\%%}\xspace}" % \
-                (x.latex_name, 100.0 - x.failure_rate_ci.median, x.failure_rate_ci.error))
+        f.write(r"\newcommand{%ssuccessrate}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
+                (x.latex_name, 100.0 - x.failure_rate_ci.median, ci_pp(x.failure_rate_ci.error, 3)))
         f.write("\n")
-        f.write(r"\newcommand{%sfailurerate}{%.2f\%%{\footnotesize$\pm$%.2f\%%}\xspace}" % \
-                (x.latex_name, x.failure_rate_ci.median, x.failure_rate_ci.error))
+        f.write(r"\newcommand{%sfailurerate}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
+                (x.latex_name, x.failure_rate_ci.median, ci_pp(x.failure_rate_ci.error, 3)))
         f.write("\n")
-        f.write(r"\newcommand{%smeantime}{%.4fs{\footnotesize$\pm$%.4fs}\xspace}" % \
-                (x.latex_name, x.recovery_time_mean_ci.median, x.recovery_time_mean_ci.error))
+        f.write(r"\newcommand{%smeantime}{%.3fs{\footnotesize$\pm$%ss}\xspace}" % \
+                (x.latex_name, x.recovery_time_mean_ci.median, ci_pp(x.recovery_time_mean_ci.error, 4)))
         f.write("\n")
-        f.write(r"\newcommand{%smediantime}{%.4fs{\footnotesize$\pm$%.4fs}\xspace}" % \
-                (x.latex_name, x.recovery_time_median_ci.median, x.recovery_time_median_ci.error))
+        f.write(r"\newcommand{%smediantime}{%.3fs{\footnotesize$\pm$%ss}\xspace}" % \
+                (x.latex_name, x.recovery_time_median_ci.median, ci_pp(x.recovery_time_median_ci.error, 4)))
         f.write("\n")
         f.write(r"\newcommand{%serrorlocs}{\numprint{%s}{\footnotesize$\pm$\numprint{%s}}\xspace}" % \
                 (x.latex_name, x.error_locs_ci.median, x.error_locs_ci.error))
@@ -408,7 +416,7 @@ with open("table.tex", "w") as f:
             costs_ci = ""
         else:
             costs_median = "%.2f" % x.costs_ci.median
-            costs_ci = "{\scriptsize$\pm$%.3f}" % x.costs_ci.error
+            costs_ci = "{\scriptsize$\pm$%s}" % ci_pp(x.costs_ci.error, 3)
         f.write("%s & %.6f & %.6f & %s & %.2f & %.2f & \\numprint{%d} \\\\[-4pt]\n" % \
                 (x.latex_name, \
                  x.recovery_time_mean_ci.median, \
@@ -417,13 +425,13 @@ with open("table.tex", "w") as f:
                  x.failure_rate_ci.median, \
                  x.input_skipped_ci.median, \
                  x.error_locs_ci.median))
-        f.write("%s & {\scriptsize$\pm$%.7f} & {\scriptsize$\pm$%.7f} & %s & {\scriptsize$\pm$%.3f} & {\scriptsize$\pm$%.3f} & {\scriptsize$\pm$%s}\\\\\n" % \
+        f.write("%s & {\scriptsize$\pm$%s} & {\scriptsize$\pm$%s} & %s & {\scriptsize$\pm$%s} & {\scriptsize$\pm$%s} & {\scriptsize$\pm$%s}\\\\\n" % \
                 (" " * len(x.latex_name), \
-                 x.recovery_time_mean_ci.error, \
-                 x.recovery_time_median_ci.error, \
+                 ci_pp(x.recovery_time_mean_ci.error, 7), \
+                 ci_pp(x.recovery_time_median_ci.error, 7), \
                  costs_ci, \
-                 x.failure_rate_ci.error, \
-                 x.input_skipped_ci.error, \
+                 ci_pp(x.failure_rate_ci.error, 3), \
+                 ci_pp(x.input_skipped_ci.error, 3), \
                  int(x.error_locs_ci.error)))
         if x.latex_name == "\\panic":
             f.write("\midrule\n")
