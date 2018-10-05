@@ -20,7 +20,7 @@ if [ ! -d grammars ]; then
     cp grammars/java7/java.y java_parser/src/java7.y
 fi
 
-if [ ! -f java_parser/Cargo.lock ]; then
+if [ -f java_parser.Cargo.lock && ! -f java_parser/Cargo.lock ]; then
     cp java_parser.Cargo.lock java_parser/Cargo.lock
 fi
 
