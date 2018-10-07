@@ -372,6 +372,10 @@ with open("experimentstats.tex", "w") as f:
 
     panic = process("\\panic", "panic.csv")
     assert cpctplus.num_runs == mf.num_runs == mfrev.num_runs == panic.num_runs
+    panic_mf_ratio_ci = confidence_ratio_error_locs(panic, mf)
+    f.write(r"\newcommand{\panicerrorlocsratioovermf}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
+            (panic_mf_ratio_ci.median, ci_pp(panic_mf_ratio_ci.error, 3)))
+    f.write("\n")
 
     # Flush all caches
     cpctplus.bootstrapped_recovery_means = None
