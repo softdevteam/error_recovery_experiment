@@ -34,10 +34,10 @@ extern crate lrlex;
 extern crate lrpar;
 
 use lrlex::LexerBuilder;
-use lrpar::{ParserBuilder, RecoveryKind};
+use lrpar::{CTParserBuilder, RecoveryKind};
 
 fn main() -> Result<(), Box<std::error::Error>> {
-    let lex_rule_ids_map = ParserBuilder::<u16>::new()
+    let lex_rule_ids_map = CTParserBuilder::<u16>::new()
                                                 .recoverer(RecoveryKind::CPCTPlus)
                                                 .process_file_in_src("java7.y")?;
     LexerBuilder::new()
