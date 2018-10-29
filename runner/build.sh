@@ -2,8 +2,8 @@
 
 set -e
 
-GRMTOOLSV=1b65ae5d
-GRAMMARSV=4f42d1a8
+GRMTOOLSV=7943146d
+GRAMMARSV=5811ecfe
 
 if [ ! -d grmtools ]; then
     git clone https://github.com/softdevteam/grmtools

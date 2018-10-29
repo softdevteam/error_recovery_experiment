@@ -1,8 +1,8 @@
 diff --git lrpar/src/lib/astar.rs lrpar/src/lib/astar.rs
-index 44a3711..53ca5ff 100644
+index 2a5ce8b..6d9fdae 100644
 --- lrpar/src/lib/astar.rs
 +++ lrpar/src/lib/astar.rs
-@@ -135,6 +135,7 @@ pub(crate) fn astar_all<N, FN, FM, FS>(start_node: N,
+@@ -147,6 +147,7 @@ where
          }
      }
  
@@ -10,7 +10,7 @@ index 44a3711..53ca5ff 100644
      scs_nodes
  }
  
-@@ -211,5 +212,6 @@ pub(crate) fn dijkstra<N, FM, FN, FS>(start_node: N,
+@@ -236,5 +237,6 @@ where
          }
      }
  
@@ -18,39 +18,22 @@ index 44a3711..53ca5ff 100644
      scs_nodes
  }
 diff --git lrpar/src/lib/parser.rs lrpar/src/lib/parser.rs
-index bd80ef2..8b21330 100644
+index 140f8e7..3409558 100644
 --- lrpar/src/lib/parser.rs
 +++ lrpar/src/lib/parser.rs
-@@ -175,6 +175,7 @@ where usize: AsPrimitive<StorageT>
-                 Some(Action::Accept) => {
-                     debug_assert_eq!(la_tidx, self.grm.eof_term_idx());
+@@ -190,6 +190,7 @@ where
+                 Action::Accept => {
+                     debug_assert_eq!(la_tidx, self.grm.eof_token_idx());
                      debug_assert_eq!(tstack.len(), 1);
 +                    println!("recovery budget {:?}", recovery_budget.as_secs() as f64 + recovery_budget.subsec_nanos() as f64 * 1e-9);
                      return true;
-                 },
-                 None => {
-@@ -212,6 +213,7 @@ where usize: AsPrimitive<StorageT>
-                     errors.push(ParseError{state_idx: st, lexeme_idx: la_idx,
-                                            lexeme: la_lexeme, repairs});
+                 }
+                 Action::Error => {
+@@ -229,6 +230,7 @@ where
+                         repairs
+                     });
                      if !keep_going {
 +                        println!("recovery budget {:?}", recovery_budget.as_secs() as f64 + recovery_budget.subsec_nanos() as f64 * 1e-9);
                          return false;
                      }
-                     la_idx = new_la_idx;
-diff --git lrpar/src/main.rs lrpar/src/main.rs
-index 6ac63ce..ebc313e 100644
---- lrpar/src/main.rs
-+++ lrpar/src/main.rs
-@@ -185,10 +185,12 @@ fn main() {
-     match parse_rcvry::<u16, _>(recoverykind, &grm, &term_cost, &sgraph, &stable, &lexemes) {
-         Ok(pt) => println!("{}", pt.pp(&grm, &input)),
-         Err((o_pt, errs)) => {
-+            /*
-             match o_pt {
-                 Some(pt) => println!("{}", pt.pp(&grm, &input)),
-                 None     => println!("Unable to repair input sufficiently to produce parse tree.\n")
-             }
-+            */
-             for e in errs {
-                 let (line, col) = lexer.line_and_col(e.lexeme()).unwrap();
-                 if e.repairs().is_empty() {
+                     laidx = new_laidx;
