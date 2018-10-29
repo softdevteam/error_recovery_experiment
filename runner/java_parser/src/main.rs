@@ -16,6 +16,9 @@ fn main() {
     let lexerdef = java7_l::lexerdef();
     let d = read_to_string(env::args().nth(1).unwrap()).unwrap();
     let mut lexer = lexerdef.lexer(&d);
+    let lexemes = lexer.all_lexemes().unwrap();
+    println!("Lexeme count: {}", lexemes.len());
+    let mut lexer = lexerdef.lexer(&d);
     let mut skipped = 0;
     match java7_y::parse(&mut lexer) {
         Ok(_) => println!("Parsed successfully"),
