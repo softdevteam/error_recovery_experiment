@@ -29,7 +29,7 @@ fn main() {
                 println!("Error at line {} col {}", line, col);
                 if !e.repairs().is_empty() {
                     for r in &e.repairs()[0] {
-                        if let ParseRepair::Delete = *r {
+                        if let ParseRepair::Delete(_) = *r {
                             skipped += 1;
                         }
                     }
