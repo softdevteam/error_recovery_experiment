@@ -418,23 +418,27 @@ with open("table.tex", "w") as f:
         if x.latex_name == "\\panic":
             costs_median = "-"
             costs_ci = ""
+            failure_rate_median = "-"
+            failure_rate_ci = ""
         else:
             costs_median = "%.2f" % x.costs_ci.median
             costs_ci = "{\scriptsize$\pm$%s}" % ci_pp(x.costs_ci.error, 3)
-        f.write("%s & %.6f & %.6f & %s & %.2f & %.2f & \\numprint{%d} \\\\[-4pt]\n" % \
+            failure_rate_median = "%.2f" % x.failure_rate_ci.median
+            failure_rate_ci = "{\scriptsize$\pm$%s}" % ci_pp(x.failure_rate_ci.error, 3)
+        f.write("%s & %.6f & %.6f & %s & %s & %.2f & \\numprint{%d} \\\\[-4pt]\n" % \
                 (x.latex_name, \
                  x.recovery_time_mean_ci.median, \
                  x.recovery_time_median_ci.median, \
                  costs_median, \
-                 x.failure_rate_ci.median, \
+                 failure_rate_median, \
                  x.input_skipped_ci.median, \
                  x.error_locs_ci.median))
-        f.write("%s & {\scriptsize$\pm$%s} & {\scriptsize$\pm$%s} & %s & {\scriptsize$\pm$%s} & {\scriptsize$\pm$%s} & {\scriptsize$\pm$%s}\\\\\n" % \
+        f.write("%s & {\scriptsize$\pm$%s} & {\scriptsize$\pm$%s} & %s & %s & {\scriptsize$\pm$%s} & {\scriptsize$\pm$%s}\\\\\n" % \
                 (" " * len(x.latex_name), \
                  ci_pp(x.recovery_time_mean_ci.error, 7), \
                  ci_pp(x.recovery_time_median_ci.error, 7), \
                  costs_ci, \
-                 ci_pp(x.failure_rate_ci.error, 3), \
+                 failure_rate_ci, \
                  ci_pp(x.input_skipped_ci.error, 3), \
                  int(x.error_locs_ci.error)))
         if x.latex_name == "\\panic":
