@@ -1,32 +1,33 @@
-diff --git src/lib/mf.rs src/lib/mf.rs
-index b62b69c..2fceef6 100644
+diff --git lrpar/src/lib/mf.rs lrpar/src/lib/mf.rs
+index a02429b..0648e72 100644
 --- lrpar/src/lib/mf.rs
 +++ lrpar/src/lib/mf.rs
-@@ -537,7 +537,7 @@ pub(crate) fn rank_cnds<StorageT: 'static + Debug + Hash + PrimInt + Unsigned>
-                   where usize: AsPrimitive<StorageT>
+@@ -546,7 +546,7 @@ where
+     u32: AsPrimitive<StorageT>
  {
      let mut cnds = Vec::new();
 -    let mut furthest = 0;
-+    let mut least = in_la_idx + TRY_PARSE_AT_MOST;
++    let mut least = in_laidx + TRY_PARSE_AT_MOST;
      for rpr_seqs in in_cnds {
          if Instant::now() >= finish_by {
              return vec![];
-@@ -553,14 +553,14 @@ pub(crate) fn rank_cnds<StorageT: 'static + Debug + Hash + PrimInt + Unsigned>
-                                 in_la_idx + TRY_PARSE_AT_MOST,
-                                 &mut pstack,
-                                 &mut None);
--        if la_idx >= furthest {
--            furthest = la_idx;
-+        if la_idx < least {
-+            least = la_idx;
+@@ -560,8 +560,8 @@ where
+             &mut pstack,
+             &mut None
+         );
+-        if laidx >= furthest {
+-            furthest = laidx;
++        if laidx < least {
++            least = laidx;
          }
-         cnds.push((pstack, la_idx, rpr_seqs));
+         cnds.push((pstack, laidx, rpr_seqs));
      }
+@@ -569,7 +569,7 @@ where
+     // Remove any elements except those which parsed as far as possible.
+     cnds = cnds
+         .into_iter()
+-        .filter(|x| x.1 == furthest)
++        .filter(|x| x.1 == least)
+         .collect::<Vec<_>>();
  
--    // Remove any elements except those which parsed as far as possible.
--    cnds = cnds.into_iter().filter(|x| x.1 == furthest).collect::<Vec<_>>();
-+    // Only keep elements which parsed the least far
-+    cnds = cnds.into_iter().filter(|x| x.1 == least).collect::<Vec<_>>();
- 
-     cnds.into_iter()
-         .flat_map(|x| x.2)
+     cnds.into_iter().flat_map(|x| x.2).collect::<Vec<_>>()

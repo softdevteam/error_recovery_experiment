@@ -2,8 +2,8 @@
 
 set -e
 
-GRMTOOLSV=1b65ae5d
-GRAMMARSV=4f42d1a8
+GRMTOOLSV=7943146d
+GRAMMARSV=5811ecfe
 
 if [ ! -d grmtools ]; then
     git clone https://github.com/softdevteam/grmtools
@@ -18,10 +18,6 @@ if [ ! -d grammars ]; then
     cd ..
     cp grammars/java7/java.l java_parser/src/java7.l
     cp grammars/java7/java.y java_parser/src/java7.y
-fi
-
-if [ -f java_parser.Cargo.lock && ! -f java_parser/Cargo.lock ]; then
-    cp java_parser.Cargo.lock java_parser/Cargo.lock
 fi
 
 if [ ! -f java_parser_cpctplus ]; then
