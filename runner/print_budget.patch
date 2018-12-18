@@ -1,8 +1,8 @@
 diff --git lrpar/src/lib/astar.rs lrpar/src/lib/astar.rs
-index 2a5ce8b..6d9fdae 100644
+index 2f70fa7..874a624 100644
 --- lrpar/src/lib/astar.rs
 +++ lrpar/src/lib/astar.rs
-@@ -147,6 +147,7 @@ where
+@@ -124,6 +124,7 @@ where
          }
      }
  
@@ -10,7 +10,7 @@ index 2a5ce8b..6d9fdae 100644
      scs_nodes
  }
  
-@@ -236,5 +237,6 @@ where
+@@ -213,5 +214,6 @@ where
          }
      }
  
@@ -18,22 +18,22 @@ index 2a5ce8b..6d9fdae 100644
      scs_nodes
  }
 diff --git lrpar/src/lib/parser.rs lrpar/src/lib/parser.rs
-index 140f8e7..3409558 100644
+index 21214b1..b3d8798 100644
 --- lrpar/src/lib/parser.rs
 +++ lrpar/src/lib/parser.rs
-@@ -190,6 +190,7 @@ where
+@@ -251,6 +251,7 @@ where
                  Action::Accept => {
                      debug_assert_eq!(la_tidx, self.grm.eof_token_idx());
-                     debug_assert_eq!(tstack.len(), 1);
+                     debug_assert_eq!(astack.len(), 1);
 +                    println!("recovery budget {:?}", recovery_budget.as_secs() as f64 + recovery_budget.subsec_nanos() as f64 * 1e-9);
-                     return true;
-                 }
-                 Action::Error => {
-@@ -229,6 +230,7 @@ where
-                         repairs
-                     });
+                     match astack.drain(..).nth(0).unwrap() {
+                         AStackType::ActionType(v) => return Some(v),
+                         _ => unreachable!()
+@@ -299,6 +300,7 @@ where
+                         .into()
+                     );
                      if !keep_going {
 +                        println!("recovery budget {:?}", recovery_budget.as_secs() as f64 + recovery_budget.subsec_nanos() as f64 * 1e-9);
-                         return false;
+                         return None;
                      }
                      laidx = new_laidx;
