@@ -4,12 +4,13 @@ version = "0.1.0"
 authors = ["Laurence Tratt <laurie@tratt.net>"]
 
 [build-dependencies]
-lrlex = {path="../grmtools/lrlex"}
-lrpar = {path="../grmtools/lrpar"}
+lrlex = { path = "../grmtools/lrlex" }
+lrpar = { path = "../grmtools/lrpar" }
 
 [dependencies]
-lrlex = {path="../grmtools/lrlex"}
-lrpar = {path="../grmtools/lrpar"}
+cfgrammar = { path = "../grmtools/cfgrammar" }
+lrlex = { path = "../grmtools/lrlex" }
+lrpar = { path = "../grmtools/lrpar" }
 
 [profile.release]
 opt-level = 3

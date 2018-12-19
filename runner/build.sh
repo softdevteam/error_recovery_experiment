@@ -2,8 +2,8 @@
 
 set -e
 
-GRMTOOLSV=7943146d
-GRAMMARSV=5811ecfe
+GRMTOOLSV=f7ca1425
+GRAMMARSV=0660c131
 
 if [ ! -d grmtools ]; then
     git clone https://github.com/softdevteam/grmtools
@@ -25,7 +25,7 @@ if [ ! -f java_parser_cpctplus ]; then
     git reset --hard
     patch -p0 < ../print_budget.patch
     cd ../java_parser
-    sed -Ei "s/RecoveryKind::.*?[)]/RecoveryKind::CPCTPlus)/" build.rs
+    sed -Ei "s/RecoveryKind::[a-zA-Z_]*[)]/RecoveryKind::CPCTPlus)/" build.rs
     rm -rf target
     cargo build --release
     cp target/release/java_parser ../java_parser_cpctplus
@@ -37,7 +37,7 @@ if [ ! -f java_parser_mf ]; then
     git reset --hard
     patch -p0 < ../print_budget.patch
     cd ../java_parser
-    sed -Ei "s/RecoveryKind::.*?[)]/RecoveryKind::MF)/" build.rs
+    sed -Ei "s/RecoveryKind::[a-zA-Z_]*[)]/RecoveryKind::MF)/" build.rs
     rm -rf target
     cargo build --release
     cp target/release/java_parser ../java_parser_mf
@@ -50,7 +50,7 @@ if [ ! -f java_parser_mf_rev ]; then
     patch -p0 < ../print_budget.patch
     patch -p0 < ../rev_rank.patch
     cd ../java_parser
-    sed -Ei "s/RecoveryKind::.*?[)]/RecoveryKind::MF)/" build.rs
+    sed -Ei "s/RecoveryKind::[a-zA-Z_]*[)]/RecoveryKind::MF)/" build.rs
     rm -rf target
     cargo build --release
     cp target/release/java_parser ../java_parser_mf_rev
@@ -61,7 +61,7 @@ if [ ! -f java_parser_none ]; then
     cd grmtools
     git reset --hard
     cd ../java_parser
-    sed -Ei "s/RecoveryKind::.*?[)]/RecoveryKind::None)/" build.rs
+    sed -Ei "s/RecoveryKind::[a-zA-Z_]*[)]/RecoveryKind::None)/" build.rs
     rm -rf target
     cargo build --release
     cp target/release/java_parser ../java_parser_none
@@ -73,7 +73,7 @@ if [ ! -f java_parser_panic ]; then
     git reset --hard
     patch -p0 < ../print_budget.patch
     cd ../java_parser
-    sed -Ei "s/RecoveryKind::.*?[)]/RecoveryKind::Panic)/" build.rs
+    sed -Ei "s/RecoveryKind::[a-zA-Z_]*[)]/RecoveryKind::Panic)/" build.rs
     rm -rf target
     cargo build --release
     cp target/release/java_parser ../java_parser_panic

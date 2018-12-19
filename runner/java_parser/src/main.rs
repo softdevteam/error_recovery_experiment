@@ -1,6 +1,7 @@
 use std::env;
 use std::fs::read_to_string;
 
+extern crate cfgrammar;
 #[macro_use] extern crate lrlex;
 #[macro_use] extern crate lrpar;
 
@@ -20,24 +21,35 @@ fn main() {
     println!("Lexeme count: {}", lexemes.len());
     let mut lexer = lexerdef.lexer(&d);
     let mut skipped = 0;
-    match java7_y::parse(&mut lexer) {
-        Ok(_) => println!("Parsed successfully"),
-        Err(LexParseError::LexError(e)) => println!("Lexing error at column {:?}", e.idx),
-        Err(LexParseError::ParseError(pt, errs)) => {
-            for e in &errs {
-                let (line, col) = lexer.line_and_col(e.lexeme()).unwrap();
-                println!("Error at line {} col {}", line, col);
-                if !e.repairs().is_empty() {
-                    for r in &e.repairs()[0] {
-                        if let ParseRepair::Delete = *r {
-                            skipped += 1;
+
+    let errs = java7_y::parse(&mut lexer);
+    if errs.is_empty() {
+        println!("Parsed successfully");
+    } else {
+        let mut completed = true;
+        for e in errs {
+            match e {
+                LexParseError::LexError(e) => {
+                    println!("Lexing error at column {:?}", e.idx);
+                    completed = false;
+                }
+                LexParseError::ParseError(e) => {
+                    let (line, col) = lexer.offset_line_col(e.lexeme().start());
+                    println!("Error at line {} col {}", line, col);
+                    if e.repairs().is_empty() {
+                        completed = false;
+                    } else {
+                        for r in &e.repairs()[0] {
+                            if let ParseRepair::Delete(_) = *r {
+                                skipped += 1;
+                            }
                         }
                     }
                 }
             }
-            if pt.is_none() {
-                println!("Parsing did not complete");
-            }
+        }
+        if !completed {
+            println!("Parsing did not complete");
         }
     }
     println!("Input skipped: {}", skipped);
