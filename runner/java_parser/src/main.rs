@@ -8,16 +8,16 @@ extern crate cfgrammar;
 use lrpar::{ParseRepair, LexParseError, Lexer};
 
 // Using `lrlex_mod!` brings the lexer for `calc.l` into scope.
-lrlex_mod!(java7_l);
-// Using `lrpar_mod!` brings the lexer for `calc.l` into scope.
-lrpar_mod!(java7_y);
+lrlex_mod!("java7.l");
+// Using `lrpar_mod!` brings the parser for `calc.y` into scope.
+lrpar_mod!("java7.y");
 
 fn main() {
     // We need to get a `LexerDef` for the `calc` language in order that we can lex input.
     let lexerdef = java7_l::lexerdef();
     let d = read_to_string(env::args().nth(1).unwrap()).unwrap();
-    let mut lexer = lexerdef.lexer(&d);
-    let lexemes = lexer.all_lexemes().unwrap();
+    let lexer = lexerdef.lexer(&d);
+    let lexemes = lexer.iter().collect::<Vec<_>>();
     println!("Lexeme count: {}", lexemes.len());
     let mut lexer = lexerdef.lexer(&d);
     let mut skipped = 0;
@@ -34,7 +34,7 @@ fn main() {
                     completed = false;
                 }
                 LexParseError::ParseError(e) => {
-                    let (line, col) = lexer.offset_line_col(e.lexeme().start());
+                    let (line, col) = lexer.line_col(e.lexeme().start());
                     println!("Error at line {} col {}", line, col);
                     if e.repairs().is_empty() {
                         completed = false;

@@ -30,19 +30,23 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+extern crate cfgrammar;
 extern crate lrlex;
 extern crate lrpar;
 
+use cfgrammar::yacc::{YaccKind, YaccOriginalActionKind};
 use lrlex::LexerBuilder;
-use lrpar::{ActionKind, CTParserBuilder, RecoveryKind};
+use lrpar::{
+    CTParserBuilder, RecoveryKind,
+};
 
-fn main() -> Result<(), Box<std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let lex_rule_ids_map = CTParserBuilder::<u16>::new_with_storaget()
-                                                .action_kind(ActionKind::NoAction)
-                                                .recoverer(RecoveryKind::CPCTPlus)
-                                                .process_file_in_src("java7.y")?;
+        .yacckind(YaccKind::Original(YaccOriginalActionKind::NoAction))
+        .recoverer(RecoveryKind::CPCTPlus)
+        .process_file_in_src("java7.y")?;
     LexerBuilder::new()
-                 .rule_ids_map(lex_rule_ids_map)
-                 .process_file_in_src("java7.l")?;
+        .rule_ids_map(lex_rule_ids_map)
+        .process_file_in_src("java7.l")?;
     Ok(())
 }
