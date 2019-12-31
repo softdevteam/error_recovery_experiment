@@ -2,8 +2,28 @@
 
 This experiment comes in two phases:
 
-  1. Generate Blackbox data
-  2. Run the experiments
+  1. Install dependencies
+  2. Generate Blackbox data
+  3. Run the experiments
+
+
+## Install dependencies
+
+To run the experiments you need to install Python 2.7 and Rust. There are
+several ways to install Rust, but [rustup](https://rustup.rs/) is generally
+the easiest, as it installs it solely for your user account:
+
+```sh
+$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+When asked, select `1) Proceed with installation (default)` to install Rust.
+
+If you wish to also process the results (i.e. generate PDF graphs and LaTeX
+tables), you will need to install LaTeX and the following Python libraries:
+matplotlib, pandas, and seaborn. You may optionally use PyPy to process the
+results, using [wheels](https://github.com/antocuni/pypy-wheels) to install the
+matplotlib, pandas, and seaborn.
 
 
 ## Generate Blackbox data
@@ -30,7 +50,7 @@ $ ./build_blackbox_data.sh
 
 This will detect the existing `blackbox/combos` file and use that to recreate
 the same Java source files we used: those source files will be put into
-`blackbox/src_files`.
+`blackbox/src_files`. This process takes around 20 minutes.
 
 
 ### Generating fresh data
@@ -38,8 +58,8 @@ the same Java source files we used: those source files will be put into
 If you want to generate a fresh batch of Blackbox data (or if you have just
 cloned this repository), you will first need to edit `blackbox/gen_combos.py`
 and (around line 50) enter the username and password that the BlueJ developers
-have given you. On the Blackbox server you should then run the following
-commands:
+have given you. On the Blackbox server you should install Rust (see the
+instructions above) and then run the following commands:
 
 ```sh
 $ cd blackbox
@@ -47,20 +67,27 @@ $ ./build_blackbox_data.sh
 ```
 
 When that completes, the source files will be placed in `blackbox/src_files`.
-Note that this is a slow process taking many hours, most of which is spent
-generating a fresh `blackbox/combos` file.
+Note that this is a slow process taking approximately 16-24 hours.
 
 
 ## Run the experiments
 
-`cd runner && ./build.sh` will build the experiments. If
-`runner/java_parser/Cargo.lock` is present, it will be used as the `Cargo.lock`
-file to build all the parser variants (i.e. recreating the build from our
-paper).
+Please do not run the experiments on the Blackbox server. Clone this repository
+afresh on your experiment machine, and copy the `blackbox/src_files` directory
+from the Blackbox server into the `blackbox` directory on your experiment
+machine.
 
-In order to run the experiments you need to execute `cd runner && mv
-../blackbox/src_files .`. You can then simple execute `./run.sh` in the
-`runner` directory. This will create output files named `runner/*.csv`.
+The main experiments are in the `runner` directory. In order that you can more
+precisely control the environment that these are run in, they are split into
+three steps which you should run in the following order:
 
-Human friendly PDF and TeX files can then be produced by running `./process.py`
-in the `runner` directory.
+```sh
+$ cd runner
+$ ./build.sh # Build the experiments
+$ ./run.sh # Run the experiments
+$ ./process.py # Generate stats and figures from the experiment data
+```
+
+If you installed PyPy, you should change that last line to `pypy process.py`.
+Note that, on the full dataset, PyPy takes about 6 hours, whereas CPython takes
+about 12 hours, both consuming up to 30GiB RAM at their peak.

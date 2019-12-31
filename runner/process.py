@@ -19,11 +19,11 @@ from numpy import histogram
 
 from pykalibera.data import confidence_slice
 
-SRC_FILES_DIR = "src_files"
+SRC_FILES_DIR = "../blackbox/src_files"
 BOOTSTRAP = 10000
 HISTOGRAM_BINS = 75
 ERROR_LOCS_HISTOGRAM_BINS = 50
-MAX_RECOVERY_TIME = 0.5
+MAX_RECOVERY_TIME = 0.5 # Seconds
 
 class PExec:
     def __init__(self,
