@@ -2,6 +2,9 @@
 
 set -e
 
+GRMTOOLSV=9fe6b86b92662a5db44ea33454ccdd3131160a5b
+GRAMMARSV=926274486b2e81c78cf41faa6a600e62bd788772
+
 cd ../runner
 ./build.sh
 cd ../blackbox
@@ -13,14 +16,14 @@ fi
 
 if [ ! -d grmtools ]; then
     git clone https://github.com/softdevteam/grmtools
-    cd grmtools/lrlex && git checkout 0b770e02
+    cd grmtools/lrlex && git checkout ${GRMTOOLSV}
     cargo build --release
     cd ../..
 fi
 
 if [ ! -d grammars ]; then
     git clone https://github.com/softdevteam/grammars/
-    cd grammars && git checkout 4f42d1a8
+    cd grammars && git checkout ${GRAMMARSV}
     cd ..
 fi
 

@@ -2,8 +2,8 @@
 
 set -e
 
-GRMTOOLSV=5fb006b0
-GRAMMARSV=0660c131
+GRMTOOLSV=9fe6b86b92662a5db44ea33454ccdd3131160a5b
+GRAMMARSV=926274486b2e81c78cf41faa6a600e62bd788772
 
 if [ ! -d grmtools ]; then
     git clone https://github.com/softdevteam/grmtools
@@ -32,28 +32,16 @@ if [ ! -f java_parser_cpctplus ]; then
     cd ..
 fi
 
-if [ ! -f java_parser_mf ]; then
-    cd grmtools
-    git reset --hard
-    patch -p0 < ../print_budget.patch
-    cd ../java_parser
-    sed -Ei "s/RecoveryKind::[a-zA-Z_]*[)]/RecoveryKind::MF)/" build.rs
-    rm -rf target
-    cargo build --release
-    cp target/release/java_parser ../java_parser_mf
-    cd ..
-fi
-
-if [ ! -f java_parser_mf_rev ]; then
+if [ ! -f java_parser_cpctplus_rev ]; then
     cd grmtools
     git reset --hard
     patch -p0 < ../print_budget.patch
     patch -p0 < ../rev_rank.patch
     cd ../java_parser
-    sed -Ei "s/RecoveryKind::[a-zA-Z_]*[)]/RecoveryKind::MF)/" build.rs
+    sed -Ei "s/RecoveryKind::[a-zA-Z_]*[)]/RecoveryKind::CPCTPlus)/" build.rs
     rm -rf target
     cargo build --release
-    cp target/release/java_parser ../java_parser_mf_rev
+    cp target/release/java_parser ../java_parser_cpctplus_rev
     cd ..
 fi
 

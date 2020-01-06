@@ -1,6 +1,6 @@
 #! /usr/bin/env python2.7
 
-import math, random, os, sys
+import gc, math, random, os, sys
 from os import listdir, stat
 
 import matplotlib
@@ -19,11 +19,11 @@ from numpy import histogram
 
 from pykalibera.data import confidence_slice
 
-SRC_FILES_DIR = "src_files"
+SRC_FILES_DIR = "../blackbox/src_files"
 BOOTSTRAP = 10000
 HISTOGRAM_BINS = 75
 ERROR_LOCS_HISTOGRAM_BINS = 50
-MAX_RECOVERY_TIME = 0.5
+MAX_RECOVERY_TIME = 0.5 # Seconds
 
 class PExec:
     def __init__(self,
@@ -212,7 +212,6 @@ def corpus_size():
 
 def time_histogram(run, p):
     bbins = [[] for _ in range(HISTOGRAM_BINS)]
-    bin_width = MAX_RECOVERY_TIME / HISTOGRAM_BINS
     for _ in range(BOOTSTRAP):
         d = [float(random.choice(pexecs).recovery_time) for pexecs in run.pexecs]
         hbins, _ = histogram(d, bins=HISTOGRAM_BINS, range=(0, MAX_RECOVERY_TIME))
@@ -225,6 +224,11 @@ def time_histogram(run, p):
         ci = confidence_slice(bbin, "0.99")
         bins.append(ci.median)
         errs.append(int(ci.error))
+
+    # On PyPy, we want to force a collection before we start running subprocesses,
+    # otherwise we can sometimes have consumed so much RAM that they can't run.
+    bbins = None
+    gc.collect()
 
     sns.set(style="whitegrid")
     plt.rc('text', usetex=True)
@@ -274,7 +278,6 @@ def flat_zip(x, y):
 def error_locs_histogram(run1, run2, p, zoom=None):
     def bins_errs(run, num_bins, max_error_locs):
         bbins = [[] for _ in range(num_bins)]
-        bin_width = max_error_locs / num_bins
         for _ in range(BOOTSTRAP):
             d = []
             for pexecs in run.pexecs:
@@ -302,6 +305,10 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     run1_bins, run1_errs = bins_errs(run1, ERROR_LOCS_HISTOGRAM_BINS, max_error_locs)
     run2_bins, run2_errs = bins_errs(run2, ERROR_LOCS_HISTOGRAM_BINS, max_error_locs)
 
+    # On PyPy, we want to force a collection before we start running subprocesses,
+    # otherwise we can sometimes have consumed so much RAM that they can't run.
+    gc.collect()
+
     sns.set(style="whitegrid")
     plt.rc('text', usetex=True)
     plt.rc('font', family='sans-serif')
@@ -312,9 +319,9 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     for i in range(0, len(barlist), 2):
         barlist[i].set_color("#777777")
         barlist[i + 1].set_color("#BBBBBB")
-    mf_patch = mpatches.Patch(color="#777777", label=r"\textrm{MF}")
-    mfrev_patch = mpatches.Patch(color="#BBBBBB", label=r"\textrm{MF}$_{\textrm{rev}}$")
-    plt.legend(handles=[mf_patch, mfrev_patch])
+    cpctplus_patch = mpatches.Patch(color="#777777", label=r"\textrm{CPCT+}")
+    cpctplusrev_patch = mpatches.Patch(color="#BBBBBB", label=r"\textrm{CPCT+}$_{\textrm{rev}}$")
+    plt.legend(handles=[cpctplus_patch, cpctplusrev_patch])
     ax.set_xlabel('Recovery error locations')
     ax.set_ylabel('Number of files (log$_{10}$)')
     ax.grid(linewidth=0.25)
@@ -352,38 +359,29 @@ with open("experimentstats.tex", "w") as f:
     # Loading in the CSV files and boostrapping consumes *lots* of memory (gigabytes), so we do it
     # in an order that allows us to keep as few things in memory as we can.
     cpctplus = process("\\cpctplus", "cpctplus.csv")
-    mf = process("\\mf", "mf.csv")
-
-    mf_cpctplus_ratio_ci = confidence_ratio_recovery_means(mf, cpctplus)
-    f.write(r"\newcommand{\mfcpctplusfailurerateratio}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
-            (mf_cpctplus_ratio_ci.median, ci_pp(mf_cpctplus_ratio_ci.error, 3)))
-    f.write("\n")
 
     # Flush some caches
-    mf.bootstrapped_recovery_means = None
     cpctplus.bootstrapped_recovery_means = None
 
-    mfrev = process("\\mfrev", "mf_rev.csv")
-    assert cpctplus.num_runs == mf.num_runs == mfrev.num_runs
-    mfrev_mf_ratio_ci = confidence_ratio_error_locs(mfrev, mf)
-    f.write(r"\newcommand{\mfreverrorlocsratioovermf}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
-            (mfrev_mf_ratio_ci.median, ci_pp(mfrev_mf_ratio_ci.error, 3)))
+    cpctplusrev = process("\\cpctplusrev", "cpctplus_rev.csv")
+    assert cpctplus.num_runs == cpctplusrev.num_runs
+    cpctplusrev_cpctplus_ratio_ci = confidence_ratio_error_locs(cpctplusrev, cpctplus)
+    f.write(r"\newcommand{\cpctplusreverrorlocsratioovercpctplus}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
+            (cpctplusrev_cpctplus_ratio_ci.median, ci_pp(cpctplusrev_cpctplus_ratio_ci.error, 3)))
     f.write("\n")
 
     panic = process("\\panic", "panic.csv")
-    assert cpctplus.num_runs == mf.num_runs == mfrev.num_runs == panic.num_runs
-    panic_mf_ratio_ci = confidence_ratio_error_locs(panic, mf)
-    f.write(r"\newcommand{\panicerrorlocsratioovermf}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
-            (panic_mf_ratio_ci.median, ci_pp(panic_mf_ratio_ci.error, 3)))
+    assert cpctplus.num_runs == cpctplusrev.num_runs == panic.num_runs
+    panic_cpctplus_ratio_ci = confidence_ratio_error_locs(panic, cpctplus)
+    f.write(r"\newcommand{\panicerrorlocsratioovercpctplus}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
+            (panic_cpctplus_ratio_ci.median, ci_pp(panic_cpctplus_ratio_ci.error, 3)))
     f.write("\n")
 
     # Flush all caches
     cpctplus.bootstrapped_recovery_means = None
     cpctplus.bootstrapped_error_locs = None
-    mf.bootstrapped_recovery_means = None
-    mf.bootstrapped_error_locs = None
-    mfrev.bootstrapped_recovery_means = None
-    mfrev.bootstrapped_error_locs = None
+    cpctplusrev.bootstrapped_recovery_means = None
+    cpctplusrev.bootstrapped_error_locs = None
     panic.bootstrapped_recovery_means = None
     panic.bootstrapped_error_locs = None
 
@@ -396,7 +394,7 @@ with open("experimentstats.tex", "w") as f:
     f.write("\n")
     f.write(r"\newcommand{\corpussizemb}{\numprint{%s}\xspace}" % str(size_bytes / 1024 / 1024))
     f.write("\n")
-    for x in [cpctplus, mf, mfrev, panic]:
+    for x in [cpctplus, cpctplusrev, panic]:
         f.write(r"\newcommand{%ssuccessrate}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
                 (x.latex_name, 100.0 - x.failure_rate_ci.median, ci_pp(x.failure_rate_ci.error, 3)))
         f.write("\n")
@@ -414,7 +412,7 @@ with open("experimentstats.tex", "w") as f:
         f.write("\n")
 
 with open("table.tex", "w") as f:
-    for x in [panic, cpctplus, mf, mfrev]:
+    for x in [panic, cpctplus, cpctplusrev]:
         if x.latex_name == "\\panic":
             costs_median = "-"
             costs_ci = ""
@@ -449,11 +447,8 @@ sys.stdout.flush()
 time_histogram(cpctplus, "cpctplus_histogram.pdf")
 sys.stdout.write(" cpctplus")
 sys.stdout.flush()
-time_histogram(mf, "mf_histogram.pdf")
-sys.stdout.write(" mf")
-sys.stdout.flush()
-time_histogram(mfrev, "mfrev_histogram.pdf")
-sys.stdout.write(" mfrev")
+time_histogram(cpctplusrev, "cpctplusrev_histogram.pdf")
+sys.stdout.write(" cpctplusrev")
 sys.stdout.flush()
 time_histogram(panic, "panic_histogram.pdf")
 sys.stdout.write(" panic")
@@ -461,13 +456,10 @@ sys.stdout.flush()
 print
 sys.stdout.write("Error locations histogram...")
 sys.stdout.flush()
-error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_full.pdf")
-sys.stdout.write(" mf/mfrev full")
+error_locs_histogram(cpctplus, cpctplusrev, "cpctplus_cpctplusrev_error_locs_histogram_full.pdf")
+sys.stdout.write(" cpctplus/cpctplusrev full")
 sys.stdout.flush()
-error_locs_histogram(mf, mfrev, "mf_mfrev_error_locs_histogram_zoomed.pdf", zoom=50)
-sys.stdout.write(" mf/mfrev zoomed")
-sys.stdout.flush()
-error_locs_histogram(mf, panic, "mf_panic_error_locs_histogram_full.pdf")
-sys.stdout.write(" mf/panic full")
+error_locs_histogram(cpctplus, cpctplusrev, "cpctplus_cpctplusrev_error_locs_histogram_zoomed.pdf", zoom=50)
+sys.stdout.write(" cpctplus/cpctplusrev zoomed")
 sys.stdout.flush()
 print

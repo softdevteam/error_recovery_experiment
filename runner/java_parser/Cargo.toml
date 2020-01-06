@@ -2,8 +2,10 @@
 name = "java_parser"
 version = "0.1.0"
 authors = ["Laurence Tratt <laurie@tratt.net>"]
+edition = "2018"
 
 [build-dependencies]
+cfgrammar = { path = "../grmtools/cfgrammar" }
 lrlex = { path = "../grmtools/lrlex" }
 lrpar = { path = "../grmtools/lrpar" }
 
