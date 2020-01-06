@@ -1,6 +1,6 @@
 #! /usr/bin/env python2.7
 
-import math, random, os, sys
+import gc, math, random, os, sys
 from os import listdir, stat
 
 import matplotlib
@@ -212,7 +212,6 @@ def corpus_size():
 
 def time_histogram(run, p):
     bbins = [[] for _ in range(HISTOGRAM_BINS)]
-    bin_width = MAX_RECOVERY_TIME / HISTOGRAM_BINS
     for _ in range(BOOTSTRAP):
         d = [float(random.choice(pexecs).recovery_time) for pexecs in run.pexecs]
         hbins, _ = histogram(d, bins=HISTOGRAM_BINS, range=(0, MAX_RECOVERY_TIME))
@@ -225,6 +224,11 @@ def time_histogram(run, p):
         ci = confidence_slice(bbin, "0.99")
         bins.append(ci.median)
         errs.append(int(ci.error))
+
+    # On PyPy, we want to force a collection before we start running subprocesses,
+    # otherwise we can sometimes have consumed so much RAM that they can't run.
+    bbins = None
+    gc.collect()
 
     sns.set(style="whitegrid")
     plt.rc('text', usetex=True)
@@ -274,7 +278,6 @@ def flat_zip(x, y):
 def error_locs_histogram(run1, run2, p, zoom=None):
     def bins_errs(run, num_bins, max_error_locs):
         bbins = [[] for _ in range(num_bins)]
-        bin_width = max_error_locs / num_bins
         for _ in range(BOOTSTRAP):
             d = []
             for pexecs in run.pexecs:
@@ -301,6 +304,10 @@ def error_locs_histogram(run1, run2, p, zoom=None):
         max_error_locs = zoom
     run1_bins, run1_errs = bins_errs(run1, ERROR_LOCS_HISTOGRAM_BINS, max_error_locs)
     run2_bins, run2_errs = bins_errs(run2, ERROR_LOCS_HISTOGRAM_BINS, max_error_locs)
+
+    # On PyPy, we want to force a collection before we start running subprocesses,
+    # otherwise we can sometimes have consumed so much RAM that they can't run.
+    gc.collect()
 
     sns.set(style="whitegrid")
     plt.rc('text', usetex=True)
