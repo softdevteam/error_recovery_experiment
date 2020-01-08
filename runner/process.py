@@ -319,8 +319,8 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     for i in range(0, len(barlist), 2):
         barlist[i].set_color("#777777")
         barlist[i + 1].set_color("#BBBBBB")
-    cpctplus_patch = mpatches.Patch(color="#777777", label=r"\textrm{CPCT+}")
-    cpctplusrev_patch = mpatches.Patch(color="#BBBBBB", label=r"\textrm{CPCT+}$_{\textrm{rev}}$")
+    cpctplus_patch = mpatches.Patch(color="#777777", label=r"\textrm{CPCT}$^+$")
+    cpctplusrev_patch = mpatches.Patch(color="#BBBBBB", label=r"\textrm{CPCT}$^+_{\textrm{rev}}$")
     plt.legend(handles=[cpctplus_patch, cpctplusrev_patch])
     ax.set_xlabel('Recovery error locations')
     ax.set_ylabel('Number of files (log$_{10}$)')
