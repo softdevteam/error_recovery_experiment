@@ -244,6 +244,7 @@ def time_histogram(run, p):
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
     plt.xlim(xmin=-.2, xmax=HISTOGRAM_BINS)
+    plt.ylim(ymax=len(run.pexecs))
     locs = []
     labs = []
     for i in range(0, 6):
