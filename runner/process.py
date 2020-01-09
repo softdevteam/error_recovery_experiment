@@ -331,6 +331,7 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
     plt.xlim(xmin=-.7, xmax=ERROR_LOCS_HISTOGRAM_BINS * 2)
+    plt.ylim(ymax=len(run1.pexecs))
     locs = []
     labs = []
     for i in range(0, 8):
