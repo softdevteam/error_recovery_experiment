@@ -410,7 +410,7 @@ with open("experimentstats.tex", "w") as f:
                 (x.latex_name, x.recovery_time_median_ci.median, ci_pp(x.recovery_time_median_ci.error, 4)))
         f.write("\n")
         f.write(r"\newcommand{%serrorlocs}{\numprint{%s}{\footnotesize$\pm$\numprint{%s}}\xspace}" % \
-                (x.latex_name, x.error_locs_ci.median, x.error_locs_ci.error))
+                (x.latex_name, int(x.error_locs_ci.median), int(x.error_locs_ci.error)))
         f.write("\n")
 
 with open("table.tex", "w") as f:
