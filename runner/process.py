@@ -260,6 +260,7 @@ def time_histogram(run, p):
     formatter = ScalarFormatter()
     formatter.set_scientific(False)
     ax.yaxis.set_major_formatter(formatter)
+    plt.tight_layout()
     plt.savefig(p, format="pdf")
 
 def calc_max_error_locs(run):
@@ -347,6 +348,7 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     formatter = ScalarFormatter()
     formatter.set_scientific(False)
     ax.yaxis.set_major_formatter(formatter)
+    plt.tight_layout()
     plt.savefig(p, format="pdf")
 
 def ci_pp(ci, dp):
