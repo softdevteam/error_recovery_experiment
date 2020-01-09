@@ -260,6 +260,7 @@ def time_histogram(run, p):
     formatter = ScalarFormatter()
     formatter.set_scientific(False)
     ax.yaxis.set_major_formatter(formatter)
+    plt.tight_layout()
     plt.savefig(p, format="pdf")
 
 def calc_max_error_locs(run):
@@ -331,6 +332,7 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
     plt.xlim(xmin=-.7, xmax=ERROR_LOCS_HISTOGRAM_BINS * 2)
+    plt.ylim(ymax=len(run1.pexecs))
     locs = []
     labs = []
     for i in range(0, 8):
@@ -346,6 +348,7 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     formatter = ScalarFormatter()
     formatter.set_scientific(False)
     ax.yaxis.set_major_formatter(formatter)
+    plt.tight_layout()
     plt.savefig(p, format="pdf")
 
 def ci_pp(ci, dp):
@@ -409,7 +412,7 @@ with open("experimentstats.tex", "w") as f:
                 (x.latex_name, x.recovery_time_median_ci.median, ci_pp(x.recovery_time_median_ci.error, 4)))
         f.write("\n")
         f.write(r"\newcommand{%serrorlocs}{\numprint{%s}{\footnotesize$\pm$\numprint{%s}}\xspace}" % \
-                (x.latex_name, x.error_locs_ci.median, x.error_locs_ci.error))
+                (x.latex_name, int(x.error_locs_ci.median), int(x.error_locs_ci.error)))
         f.write("\n")
 
 with open("table.tex", "w") as f:
