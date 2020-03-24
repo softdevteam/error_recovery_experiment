@@ -1,0 +1,42 @@
+diff --git lrpar/src/lib/cpctplus.rs lrpar/src/lib/cpctplus.rs
+index 8cc95d0..13c0318 100644
+--- lrpar/src/lib/cpctplus.rs
++++ lrpar/src/lib/cpctplus.rs
+@@ -62,36 +62,7 @@ impl<StorageT: PrimInt + Unsigned> Hash for PathFNode<StorageT> {
+ 
+ impl<StorageT: PrimInt + Unsigned> PartialEq for PathFNode<StorageT> {
+     fn eq(&self, other: &PathFNode<StorageT>) -> bool {
+-        if self.laidx != other.laidx || self.pstack != other.pstack {
+-            return false;
+-        }
+-        // The rest of this function is subtle: we're not looking for repair sequences which are
+-        // exactly equivalent, but ones that are compatible. This is necessary so that we can merge
+-        // compatible nodes. Our definition of compatible repair sequences is: they must end with
+-        // exactly the same number of shifts (ending with zero shifts is fine); and if one repair
+-        // sequence ends in a delete, the other must do so as well.
+-
+-        match (self.last_repair(), other.last_repair()) {
+-            (Some(Repair::Delete), Some(Repair::Delete)) => (),
+-            (Some(Repair::Delete), _) | (_, Some(Repair::Delete)) => return false,
+-            (_, _) => ()
+-        }
+-
+-        let num_shifts = |c: &Cactus<RepairMerge<StorageT>>| {
+-            let mut n = 0;
+-            for r in c.vals() {
+-                match *r {
+-                    RepairMerge::Repair(Repair::Shift) | RepairMerge::Merge(Repair::Shift, _) => {
+-                        n += 1
+-                    }
+-                    _ => break
+-                }
+-            }
+-            n
+-        };
+-        let self_shifts = num_shifts(&self.repairs);
+-        let other_shifts = num_shifts(&other.repairs);
+-        self_shifts == other_shifts
++        return false;
+     }
+ }
+ 

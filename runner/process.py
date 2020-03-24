@@ -364,8 +364,18 @@ with open("experimentstats.tex", "w") as f:
     # in an order that allows us to keep as few things in memory as we can.
     cpctplus = process("\\cpctplus", "cpctplus.csv")
 
-    # Flush some caches
+    # Flush cache
     cpctplus.bootstrapped_recovery_means = None
+
+    cpctplusdontmerge = process("\\cpctplusdontmerge", "cpctplus_dontmerge.csv")
+    assert cpctplus.num_runs == cpctplusdontmerge.num_runs
+    cpctplusdontmerge_cpctplus_ratio_ci = confidence_ratio_error_locs(cpctplusdontmerge, cpctplus)
+    f.write(r"\newcommand{\cpctplusdontmergeerrorlocsratioovercpctplus}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
+            (cpctplusdontmerge_cpctplus_ratio_ci.median, ci_pp(cpctplusdontmerge_cpctplus_ratio_ci.error, 3)))
+    f.write("\n")
+
+    cpctplusdontmerge.bootstrapped_recovery_means = None
+    cpctplusdontmerge.bootstrapped_error_locs = None
 
     cpctplusrev = process("\\cpctplusrev", "cpctplus_rev.csv")
     assert cpctplus.num_runs == cpctplusrev.num_runs
@@ -374,6 +384,9 @@ with open("experimentstats.tex", "w") as f:
             (cpctplusrev_cpctplus_ratio_ci.median, ci_pp(cpctplusrev_cpctplus_ratio_ci.error, 3)))
     f.write("\n")
 
+    cpctplusrev.bootstrapped_recovery_means = None
+    cpctplusrev.bootstrapped_error_locs = None
+
     panic = process("\\panic", "panic.csv")
     assert cpctplus.num_runs == cpctplusrev.num_runs == panic.num_runs
     panic_cpctplus_ratio_ci = confidence_ratio_error_locs(panic, cpctplus)
@@ -381,11 +394,8 @@ with open("experimentstats.tex", "w") as f:
             (panic_cpctplus_ratio_ci.median, ci_pp(panic_cpctplus_ratio_ci.error, 3)))
     f.write("\n")
 
-    # Flush all caches
     cpctplus.bootstrapped_recovery_means = None
     cpctplus.bootstrapped_error_locs = None
-    cpctplusrev.bootstrapped_recovery_means = None
-    cpctplusrev.bootstrapped_error_locs = None
     panic.bootstrapped_recovery_means = None
     panic.bootstrapped_error_locs = None
 
@@ -398,7 +408,7 @@ with open("experimentstats.tex", "w") as f:
     f.write("\n")
     f.write(r"\newcommand{\corpussizemb}{\numprint{%s}\xspace}" % str(size_bytes / 1024 / 1024))
     f.write("\n")
-    for x in [cpctplus, cpctplusrev, panic]:
+    for x in [cpctplus, cpctplusdontmerge, cpctplusrev, panic]:
         f.write(r"\newcommand{%ssuccessrate}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
                 (x.latex_name, 100.0 - x.failure_rate_ci.median, ci_pp(x.failure_rate_ci.error, 3)))
         f.write("\n")
@@ -416,7 +426,7 @@ with open("experimentstats.tex", "w") as f:
         f.write("\n")
 
 with open("table.tex", "w") as f:
-    for x in [panic, cpctplus, cpctplusrev]:
+    for x in [panic, cpctplus, cpctplusdontmerge, cpctplusrev]:
         if x.latex_name == "\\panic":
             costs_median = "-"
             costs_ci = ""
@@ -450,6 +460,9 @@ sys.stdout.write("Time histograms...")
 sys.stdout.flush()
 time_histogram(cpctplus, "cpctplus_histogram.pdf")
 sys.stdout.write(" cpctplus")
+sys.stdout.flush()
+time_histogram(cpctplusdontmerge, "cpctplusdontmerge_histogram.pdf")
+sys.stdout.write(" cpctplusdontmerge")
 sys.stdout.flush()
 time_histogram(cpctplusrev, "cpctplusrev_histogram.pdf")
 sys.stdout.write(" cpctplusrev")
