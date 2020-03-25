@@ -32,6 +32,19 @@ if [ ! -f java_parser_cpctplus ]; then
     cd ..
 fi
 
+if [ ! -f java_parser_cpctplus_dontmerge ]; then
+    cd grmtools
+    git reset --hard
+    patch -p0 < ../print_budget.patch
+    patch -p0 < ../dontmerge.patch
+    cd ../java_parser
+    sed -Ei "s/RecoveryKind::[a-zA-Z_]*[)]/RecoveryKind::CPCTPlus)/" build.rs
+    rm -rf target
+    cargo build --release
+    cp target/release/java_parser ../java_parser_cpctplus_dontmerge
+    cd ..
+fi
+
 if [ ! -f java_parser_cpctplus_rev ]; then
     cd grmtools
     git reset --hard
