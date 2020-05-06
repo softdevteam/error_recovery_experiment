@@ -2,7 +2,7 @@
 
 set -e
 
-GRMTOOLSV=9fe6b86b92662a5db44ea33454ccdd3131160a5b
+GRMTOOLSV=grmtools-0.7.0
 GRAMMARSV=926274486b2e81c78cf41faa6a600e62bd788772
 
 if [ ! -d grmtools ]; then

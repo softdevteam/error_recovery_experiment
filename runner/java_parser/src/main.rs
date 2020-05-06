@@ -1,11 +1,10 @@
 use std::env;
 use std::fs::read_to_string;
 
-extern crate cfgrammar;
-#[macro_use] extern crate lrlex;
-#[macro_use] extern crate lrpar;
+use lrlex::lrlex_mod;
+use lrpar::lrpar_mod;
 
-use lrpar::{ParseRepair, LexParseError, Lexer};
+use lrpar::{NonStreamingLexer, ParseRepair, LexParseError, Lexer};
 
 // Using `lrlex_mod!` brings the lexer for `calc.l` into scope.
 lrlex_mod!("java7.l");
@@ -30,11 +29,12 @@ fn main() {
         for e in errs {
             match e {
                 LexParseError::LexError(e) => {
-                    println!("Lexing error at column {:?}", e.idx);
+                    let ((line, col), _) = lexer.line_col(e.span());
+                    println!("Lexing error at line {} column {:?}", line, col);
                     completed = false;
                 }
                 LexParseError::ParseError(e) => {
-                    let (line, col) = lexer.line_col(e.lexeme().start());
+                    let ((line, col), _) = lexer.line_col(e.lexeme().span());
                     println!("Error at line {} col {}", line, col);
                     if e.repairs().is_empty() {
                         completed = false;
