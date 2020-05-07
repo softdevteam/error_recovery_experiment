@@ -9,10 +9,10 @@ RE_COST = re.compile("^repair cost ([0-9.]+)", re.MULTILINE)
 RE_RECOVERY_POINTS = re.compile("^Error at line", re.MULTILINE)
 RE_LEXEME_COUNT = re.compile("^Lexeme count: ([0-9]+)", re.MULTILINE)
 RE_SKIPPED = re.compile("^Input skipped: ([0-9]+)", re.MULTILINE)
-BUDGET = 0.5
 PEXECS = 30
 
-src_files, binary, outp = sys.argv[1:4]
+src_files, binary, budget, outp = sys.argv[1:5]
+budget = float(budget)
 
 assert not os.path.exists(outp)
 
@@ -37,7 +37,7 @@ with open(outp, "w") as outf:
                 output = tmpf.read()
                 m = RE_BUDGET.search(output)
                 remaining = float(m.group(1))
-                spent = BUDGET - remaining
+                spent = budget - remaining
                 if "Parsing did not complete" in output:
                     failures += 1
                     f = "0"

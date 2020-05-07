@@ -23,7 +23,7 @@ SRC_FILES_DIR = "../blackbox/src_files"
 BOOTSTRAP = 10000
 HISTOGRAM_BINS = 75
 ERROR_LOCS_HISTOGRAM_BINS = 50
-MAX_RECOVERY_TIME = 0.5 # Seconds
+RECOVERY_BUDGET = 0.5 # Seconds
 
 class PExec:
     def __init__(self,
@@ -210,11 +210,11 @@ def corpus_size():
         num_files += 1
     return num_files, size_bytes
 
-def time_histogram(run, p):
+def time_histogram(run, p, budget = RECOVERY_BUDGET):
     bbins = [[] for _ in range(HISTOGRAM_BINS)]
     for _ in range(BOOTSTRAP):
         d = [float(random.choice(pexecs).recovery_time) for pexecs in run.pexecs]
-        hbins, _ = histogram(d, bins=HISTOGRAM_BINS, range=(0, MAX_RECOVERY_TIME))
+        hbins, _ = histogram(d, bins=HISTOGRAM_BINS, range=(0, budget))
         for i, cnt in enumerate(hbins):
             bbins[i].append(cnt)
 
@@ -247,9 +247,13 @@ def time_histogram(run, p):
     plt.ylim(ymax=len(run.pexecs))
     locs = []
     labs = []
-    for i in range(0, 6):
-        locs.append((HISTOGRAM_BINS / 5) * i - 0.5)
-        labs.append(i / 10.0)
+    if budget <= 0.5:
+        num_labs = 5
+    else:
+        num_labs = 8
+    for i in range(0, num_labs + 1):
+        locs.append((HISTOGRAM_BINS / float(num_labs)) * i - 0.5)
+        labs.append(i / (float(num_labs) / budget))
     plt.xticks(locs, labs)
     yticks = []
     i = len(run.pexecs)
@@ -387,6 +391,12 @@ with open("experimentstats.tex", "w") as f:
     cpctplusrev.bootstrapped_recovery_means = None
     cpctplusrev.bootstrapped_error_locs = None
 
+    cpctpluslonger = process("\\cpctpluslonger", "cpctplus_longer.csv")
+    assert cpctplus.num_runs == cpctpluslonger.num_runs
+
+    cpctpluslonger.bootstrapped_recovery_means = None
+    cpctpluslonger.bootstrapped_error_locs = None
+
     panic = process("\\panic", "panic.csv")
     assert cpctplus.num_runs == cpctplusrev.num_runs == panic.num_runs
     panic_cpctplus_ratio_ci = confidence_ratio_error_locs(panic, cpctplus)
@@ -467,8 +477,8 @@ sys.stdout.flush()
 time_histogram(cpctplusrev, "cpctplusrev_histogram.pdf")
 sys.stdout.write(" cpctplusrev")
 sys.stdout.flush()
-time_histogram(panic, "panic_histogram.pdf")
-sys.stdout.write(" panic")
+time_histogram(cpctpluslonger, "cpctpluslonger_histogram.pdf", budget=2.0)
+sys.stdout.write(" cpctpluslonger")
 sys.stdout.flush()
 print
 sys.stdout.write("Error locations histogram...")
