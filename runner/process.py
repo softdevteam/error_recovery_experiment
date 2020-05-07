@@ -236,6 +236,7 @@ def time_histogram(run, p, budget = RECOVERY_BUDGET):
     fig, ax = plt.subplots(figsize=(8, 4))
     plt.bar(range(HISTOGRAM_BINS), bins, yerr=errs, align="center", log=True, color="#777777", \
             error_kw={"ecolor": "black", "elinewidth": 1, "capthick": 0.5, "capsize": 1})
+    plt.yscale('symlog')
     ax.set_xlabel('Recovery time (s)')
     ax.set_ylabel('Number of files (log$_{10}$)')
     ax.grid(linewidth=0.25)
@@ -243,8 +244,10 @@ def time_histogram(run, p, budget = RECOVERY_BUDGET):
     ax.spines['top'].set_visible(False)
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
+    ax.yaxis.set_tick_params(which='minor', size=0)
+    ax.yaxis.set_tick_params(which='minor', width=0)
     plt.xlim(xmin=-.2, xmax=HISTOGRAM_BINS)
-    plt.ylim(ymax=len(run.pexecs))
+    plt.ylim(ymin=0, ymax=len(run.pexecs))
     locs = []
     labs = []
     if budget <= 0.5:
@@ -255,12 +258,19 @@ def time_histogram(run, p, budget = RECOVERY_BUDGET):
         locs.append((HISTOGRAM_BINS / float(num_labs)) * i - 0.5)
         labs.append(i / (float(num_labs) / budget))
     plt.xticks(locs, labs)
-    yticks = []
+    ylocs = []
+    ylabs = []
     i = len(run.pexecs)
-    while i >= 10:
-        yticks.append(i)
+    while True:
+        if i < 1:
+            ylocs.append(0)
+            ylabs.append(0)
+            break
+        else:
+            ylocs.append(i)
+            ylabs.append(i)
         i /= 10
-    plt.yticks(yticks, [str(x) for x in yticks])
+    plt.yticks(ylocs, ylabs)
     formatter = ScalarFormatter()
     formatter.set_scientific(False)
     ax.yaxis.set_major_formatter(formatter)
