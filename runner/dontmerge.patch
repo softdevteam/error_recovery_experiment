@@ -1,8 +1,8 @@
 diff --git lrpar/src/lib/cpctplus.rs lrpar/src/lib/cpctplus.rs
-index 8cc95d0..13c0318 100644
+index e138e0d..cd8ba29 100644
 --- lrpar/src/lib/cpctplus.rs
 +++ lrpar/src/lib/cpctplus.rs
-@@ -62,36 +62,7 @@ impl<StorageT: PrimInt + Unsigned> Hash for PathFNode<StorageT> {
+@@ -63,36 +63,7 @@ impl<StorageT: PrimInt + Unsigned> Hash for PathFNode<StorageT> {
  
  impl<StorageT: PrimInt + Unsigned> PartialEq for PathFNode<StorageT> {
      fn eq(&self, other: &PathFNode<StorageT>) -> bool {

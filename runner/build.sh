@@ -2,7 +2,7 @@
 
 set -e
 
-GRMTOOLSV=9fe6b86b92662a5db44ea33454ccdd3131160a5b
+GRMTOOLSV=grmtools-0.7.0
 GRAMMARSV=926274486b2e81c78cf41faa6a600e62bd788772
 
 if [ ! -d grmtools ]; then
@@ -55,6 +55,19 @@ if [ ! -f java_parser_cpctplus_rev ]; then
     rm -rf target
     cargo build --release
     cp target/release/java_parser ../java_parser_cpctplus_rev
+    cd ..
+fi
+
+if [ ! -f java_parser_cpctplus_longer ]; then
+    cd grmtools
+    git reset --hard
+    patch -p0 < ../longer_budget.patch
+    patch -p0 < ../print_budget.patch
+    cd ../java_parser
+    sed -Ei "s/RecoveryKind::[a-zA-Z_]*[)]/RecoveryKind::CPCTPlus)/" build.rs
+    rm -rf target
+    cargo build --release
+    cp target/release/java_parser ../java_parser_cpctplus_longer
     cd ..
 fi
 

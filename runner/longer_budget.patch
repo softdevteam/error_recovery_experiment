@@ -1,0 +1,13 @@
+diff --git lrpar/src/lib/parser.rs lrpar/src/lib/parser.rs
+index dfd051e..50afcae 100644
+--- lrpar/src/lib/parser.rs
++++ lrpar/src/lib/parser.rs
+@@ -21,7 +21,7 @@ use crate::{
+ #[cfg(test)]
+ const RECOVERY_TIME_BUDGET: u64 = 60_000; // milliseconds
+ #[cfg(not(test))]
+-const RECOVERY_TIME_BUDGET: u64 = 500; // milliseconds
++const RECOVERY_TIME_BUDGET: u64 = 2000; // milliseconds
+ 
+ /// A generic parse tree.
+ #[derive(Debug, Clone, PartialEq)]

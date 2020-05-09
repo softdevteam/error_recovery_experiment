@@ -1,8 +1,8 @@
 diff --git lrpar/src/lib/mf.rs lrpar/src/lib/mf.rs
-index a02429b..0648e72 100644
+index eb935e6..25680a3 100644
 --- lrpar/src/lib/mf.rs
 +++ lrpar/src/lib/mf.rs
-@@ -546,7 +546,7 @@ where
+@@ -558,7 +558,7 @@ where
      u32: AsPrimitive<StorageT>
  {
      let mut cnds = Vec::new();
@@ -11,8 +11,8 @@ index a02429b..0648e72 100644
      for rpr_seqs in in_cnds {
          if Instant::now() >= finish_by {
              return vec![];
-@@ -560,8 +560,8 @@ where
-             &mut pstack,
+@@ -580,8 +580,8 @@ where
+             &mut None,
              &mut None
          );
 -        if laidx >= furthest {
@@ -22,7 +22,7 @@ index a02429b..0648e72 100644
          }
          cnds.push((pstack, laidx, rpr_seqs));
      }
-@@ -569,7 +569,7 @@ where
+@@ -589,7 +589,7 @@ where
      // Remove any elements except those which parsed as far as possible.
      cnds = cnds
          .into_iter()

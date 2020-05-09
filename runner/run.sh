@@ -3,10 +3,12 @@
 set -e
 
 echo "===> cpctplus"
-./run.py ../blackbox/src_files java_parser_cpctplus cpctplus.csv
+./run.py ../blackbox/src_files ./java_parser_cpctplus 0.5 cpctplus.csv
 echo "===> cpctplus_dont_merge"
-./run.py ../blackbox/src_files java_parser_cpctplus_dontmerge cpctplus_dontmerge.csv
+./run.py ../blackbox/src_files ./java_parser_cpctplus_dontmerge 0.5 cpctplus_dontmerge.csv
 echo "===> cpctplus_rev"
-./run.py ../blackbox/src_files java_parser_cpctplus_rev cpctplus_rev.csv
+./run.py ../blackbox/src_files ./java_parser_cpctplus_rev 0.5 cpctplus_rev.csv
+echo "===> cpctplus_long"
+./run.py ../blackbox/src_files ./java_parser_cpctplus_longer 2.0 cpctplus_longer.csv
 echo "===> panic"
-./run.py ../blackbox/src_files java_parser_panic panic.csv
+./run.py ../blackbox/src_files ./java_parser_panic 0.5 panic.csv

@@ -1,8 +1,8 @@
 diff --git lrpar/src/lib/astar.rs lrpar/src/lib/astar.rs
-index 2f70fa7..874a624 100644
+index 559c7fc..b4b77c2 100644
 --- lrpar/src/lib/astar.rs
 +++ lrpar/src/lib/astar.rs
-@@ -124,6 +124,7 @@ where
+@@ -121,6 +121,7 @@ where
          }
      }
  
@@ -10,7 +10,7 @@ index 2f70fa7..874a624 100644
      scs_nodes
  }
  
-@@ -213,5 +214,6 @@ where
+@@ -210,5 +211,6 @@ where
          }
      }
  
@@ -18,10 +18,10 @@ index 2f70fa7..874a624 100644
      scs_nodes
  }
 diff --git lrpar/src/lib/parser.rs lrpar/src/lib/parser.rs
-index 21214b1..b3d8798 100644
+index dfd051e..5473e29 100644
 --- lrpar/src/lib/parser.rs
 +++ lrpar/src/lib/parser.rs
-@@ -251,6 +251,7 @@ where
+@@ -305,6 +305,7 @@ where
                  Action::Accept => {
                      debug_assert_eq!(la_tidx, self.grm.eof_token_idx());
                      debug_assert_eq!(astack.len(), 1);
@@ -29,7 +29,7 @@ index 21214b1..b3d8798 100644
                      match astack.drain(..).nth(0).unwrap() {
                          AStackType::ActionType(v) => return Some(v),
                          _ => unreachable!()
-@@ -299,6 +300,7 @@ where
+@@ -353,6 +354,7 @@ where
                          .into()
                      );
                      if !keep_going {
