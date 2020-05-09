@@ -192,8 +192,8 @@ def process(latex_name, p):
                 assert s[3] == "0"
                 succeeded = False
             costs = [int(x) for x in s[5].split(":") if x != ""]
-            if latex_name != "\\panic" and succeeded and len(costs) == 0:
-                print "Warning: %s (pexec #%s) succeeded without parsing errors" % (s[0], s[1])
+            if latex_name not in ["\\corchuelo", "\\panic"] and succeeded and len(costs) == 0:
+                print "Warning: %s (pexec #%s of %s) succeeded without parsing errors" % (s[0], s[1], latex_name)
                 continue
             pexec = PExec(s[0], int(s[1]), float(s[2]), succeeded, int(s[4]), costs, int(s[6]), int(s[7]))
             max_run_num = max(max_run_num, pexec.run_num)
@@ -407,6 +407,12 @@ with open("experimentstats.tex", "w") as f:
     cpctpluslonger.bootstrapped_recovery_means = None
     cpctpluslonger.bootstrapped_error_locs = None
 
+    corchuelo = process("\\corchuelo", "corchuelo.csv")
+    assert cpctplus.num_runs == corchuelo.num_runs
+
+    corchuelo.bootstrapped_recovery_means = None
+    corchuelo.bootstrapped_error_locs = None
+
     panic = process("\\panic", "panic.csv")
     assert cpctplus.num_runs == cpctplusrev.num_runs == panic.num_runs
     panic_cpctplus_ratio_ci = confidence_ratio_error_locs(panic, cpctplus)
@@ -446,17 +452,16 @@ with open("experimentstats.tex", "w") as f:
         f.write("\n")
 
 with open("table.tex", "w") as f:
-    for x in [panic, cpctplus, cpctplusdontmerge, cpctplusrev]:
-        if x.latex_name == "\\panic":
+    for x in [corchuelo, cpctplus, panic, cpctplusdontmerge, cpctplusrev]:
+        if x.latex_name in ["\\corchuelo", "\\panic"]:
             costs_median = "-"
             costs_ci = ""
-            failure_rate_median = "-"
-            failure_rate_ci = ""
         else:
             costs_median = "%.2f" % x.costs_ci.median
             costs_ci = "{\scriptsize$\pm$%s}" % ci_pp(x.costs_ci.error, 3)
-            failure_rate_median = "%.2f" % x.failure_rate_ci.median
-            failure_rate_ci = "{\scriptsize$\pm$%s}" % ci_pp(x.failure_rate_ci.error, 3)
+        failure_rate_median = "%.2f" % x.failure_rate_ci.median
+        failure_rate_ci = "{\scriptsize$\pm$%s}" % ci_pp(x.failure_rate_ci.error, 3)
+
         f.write("%s & %.6f & %.6f & %s & %s & %.2f & \\numprint{%d} \\\\[-4pt]\n" % \
                 (x.latex_name, \
                  x.recovery_time_mean_ci.median, \

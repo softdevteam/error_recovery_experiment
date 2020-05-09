@@ -1,0 +1,261 @@
+diff --git lrpar/src/lib/astar.rs lrpar/src/lib/astar.rs
+index b4b77c2..981d35f 100644
+--- lrpar/src/lib/astar.rs
++++ lrpar/src/lib/astar.rs
+@@ -1,4 +1,4 @@
+-use std::{fmt::Debug, hash::Hash};
++use std::{collections::VecDeque, fmt::Debug, hash::Hash};
+ 
+ use indexmap::{
+     indexmap,
+@@ -146,71 +146,23 @@ where
+     FM: Fn(&mut N, N),
+     FS: Fn(&N) -> bool
+ {
+-    let mut scs_nodes = Vec::new();
+-    let mut todo: Vec<IndexMap<N, N>> = vec![indexmap![start_node.clone() => start_node]];
+-    let mut c: u16 = 0;
++    let mut todo = VecDeque::new();
++    todo.push_front((0, start_node.clone()));
+     let mut next = Vec::new();
+-    loop {
+-        if todo[usize::from(c)].is_empty() {
+-            c = c.checked_add(1).unwrap();
+-            if usize::from(c) == todo.len() {
+-                return Vec::new();
+-            }
+-            continue;
+-        }
+-
+-        let n = todo[usize::from(c)].pop().unwrap().1;
+-        if success(&n) {
+-            scs_nodes.push(n);
+-            break;
+-        }
++    while !todo.is_empty() {
++        let (c, n) = todo.pop_front().unwrap();
+ 
+         if !neighbours(true, &n, &mut next) {
+             return Vec::new();
+         }
+         for (nbr_cost, nbr) in next.drain(..) {
+-            let off = usize::from(nbr_cost);
+-            for _ in todo.len()..off + 1 {
+-                todo.push(IndexMap::new());
+-            }
+-            match todo[off].entry(nbr.clone()) {
+-                Entry::Vacant(e) => {
+-                    e.insert(nbr);
+-                }
+-                Entry::Occupied(mut e) => {
+-                    merge(&mut e.get_mut(), nbr);
+-                }
++            if success(&nbr) {
++                println!("repair cost {}", c);
++                return vec![nbr];
+             }
++
++            todo.push_back((nbr_cost, nbr));
+         }
+     }
+-
+-    let mut scs_todo = todo
+-        .drain(usize::from(c)..usize::from(c) + 1)
+-        .nth(0)
+-        .unwrap();
+-    while !scs_todo.is_empty() {
+-        let n = scs_todo.pop().unwrap().1;
+-        if success(&n) {
+-            scs_nodes.push(n);
+-            continue;
+-        }
+-        if !neighbours(false, &n, &mut next) {
+-            return Vec::new();
+-        }
+-        for (nbr_cost, nbr) in next.drain(..) {
+-            if nbr_cost == c {
+-                match scs_todo.entry(nbr.clone()) {
+-                    Entry::Vacant(e) => {
+-                        e.insert(nbr);
+-                    }
+-                    Entry::Occupied(mut e) => {
+-                        merge(&mut e.get_mut(), nbr);
+-                    }
+-                }
+-            }
+-        }
+-    }
+-
+-    println!("repair cost {}", c);
+-    scs_nodes
++    Vec::new()
+ }
+diff --git lrpar/src/lib/cpctplus.rs lrpar/src/lib/cpctplus.rs
+index cd8ba29..caa0b1d 100644
+--- lrpar/src/lib/cpctplus.rs
++++ lrpar/src/lib/cpctplus.rs
+@@ -13,11 +13,15 @@ use super::{
+     astar::dijkstra,
+     lex::Lexeme,
+     mf::{apply_repairs, rank_cnds, simplify_repairs},
++    panic,
+     parser::{AStackType, ParseRepair, Parser, Recoverer},
+     Span
+ };
+ 
+ const PARSE_AT_LEAST: usize = 3; // N in Corchuelo et al.
++const MAX_DELETES: usize = 3; // Nd in Corchuelo et al.
++const MAX_INSERTS: usize = 4; // Ni in Corchuelo et al.
++const MAX_INPUT: usize = 10; // Nt in Corchuelo et al.
+ 
+ #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+ enum Repair<StorageT> {
+@@ -138,6 +142,9 @@ where
+                 if Instant::now() >= finish_by {
+                     return false;
+                 }
++                if n.laidx >= in_laidx + MAX_INPUT {
++                    return true;
++                }
+ 
+                 match n.last_repair() {
+                     Some(Repair::Delete) => {
+@@ -194,26 +201,27 @@ where
+             }
+         );
+ 
+-        if astar_cnds.is_empty() {
+-            return (in_laidx, vec![]);
+-        }
+-
+         let full_rprs = self.collect_repairs(in_laidx, astar_cnds);
+-        let mut rnk_rprs = rank_cnds(parser, finish_by, in_laidx, &in_pstack, full_rprs);
+-        if rnk_rprs.is_empty() {
+-            return (in_laidx, vec![]);
+-        }
+-        simplify_repairs(parser, &mut rnk_rprs);
+-        let laidx = apply_repairs(
+-            parser,
+-            in_laidx,
+-            &mut in_pstack,
+-            &mut Some(&mut astack),
+-            &mut Some(&mut spans),
+-            &rnk_rprs[0]
+-        );
++        if full_rprs.len() == 0 {
++            panic::recoverer(parser).recover(finish_by, parser, in_laidx, in_pstack, astack, spans)
++        } else {
++            let mut rnk_rprs = rank_cnds(parser, finish_by, in_laidx, &in_pstack, full_rprs);
++            assert!(rnk_rprs.len() < 2);
++            if rnk_rprs.is_empty() {
++                return (in_laidx, vec![]);
++            }
++            simplify_repairs(parser, &mut rnk_rprs);
++            let laidx = apply_repairs(
++                parser,
++                in_laidx,
++                &mut in_pstack,
++                &mut Some(&mut astack),
++                &mut Some(&mut spans),
++                &rnk_rprs[0]
++            );
+ 
+-        (laidx, rnk_rprs)
++            (laidx, rnk_rprs)
++        }
+     }
+ }
+ 
+@@ -229,6 +237,16 @@ where
+     u32: AsPrimitive<StorageT>
+ {
+     fn insert(&self, n: &PathFNode<StorageT>, nbrs: &mut Vec<(u16, PathFNode<StorageT>)>) {
++        let num_inserts = n.repairs.vals().filter(|x| {
++            match *x {
++                RepairMerge::Repair(Repair::InsertTerm(_)) | RepairMerge::Merge(Repair::InsertTerm(_), _) => true,
++                _ => false
++            }
++        }).count();
++        if num_inserts == MAX_INSERTS {
++            return;
++        }
++
+         let laidx = n.laidx;
+         for tidx in self.parser.stable.state_actions(*n.pstack.val().unwrap()) {
+             if tidx == self.parser.grm.eof_token_idx() {
+@@ -270,6 +288,16 @@ where
+             return;
+         }
+ 
++        let num_deletes = n.repairs.vals().filter(|x| {
++            match *x {
++                RepairMerge::Repair(Repair::Delete) | RepairMerge::Merge(Repair::Delete, _) => true,
++                _ => false
++            }
++        }).count();
++        if num_deletes == MAX_DELETES {
++            return;
++        }
++
+         let la_tidx = self.parser.next_tidx(n.laidx);
+         let cost = (self.parser.token_cost)(la_tidx);
+         let nn = PathFNode {
+@@ -284,37 +312,21 @@ where
+     fn shift(&self, n: &PathFNode<StorageT>, nbrs: &mut Vec<(u16, PathFNode<StorageT>)>) {
+         // Forward move rule (ER3)
+         //
+-        // Note the rule in Corchuelo et al. is confusing and, I think, wrong. It reads:
++        // Note the rule in Corchuelo et al. is confusing. It reads:
+         //   (S, I) \rightarrow_{LR*} (S', I')
+         //   \wedge (j = N \vee 0 < j < N \wedge f(q_r, t_{j + 1} \in {accept, error})
+-        // First I think the bracketing would be clearer if written as:
++        // I think the bracketing would be clearer if written as:
+         //   j = N \vee (0 < j < N \wedge f(q_r, t_{j + 1} \in {accept, error})
+-        // And I think the condition should be:
+-        //   j = N \vee (0 <= j < N \wedge f(q_r, t_{j + 1} \in {accept, error})
+-        // because there's no reason that any symbols need to be shifted in order for an accept
+-        // (or, indeed an error) state to be reached.
+-        //
+-        // So the full rule should, I think, be:
+-        //   (S, I) \rightarrow_{LR*} (S', I')
+-        //   \wedge (j = N \vee (0 <= j < N \wedge f(q_r, t_{j + 1} \in {accept, error}))
+-        //
+-        // That said, as KimYi somewhat obliquely mention, generating multiple shifts in one go is
+-        // a bad idea: it means that we miss out on some minimal cost repairs. Instead, we should
+-        // only generate one shift at a time. So the adjusted rule we implement is:
+-        //
+-        //   (S, I) \rightarrow_{LR*} (S', I')
+-        //   \wedge 0 <= j < 1 \wedge S != S'
+ 
+         let laidx = n.laidx;
+         let (new_laidx, n_pstack) =
+             self.parser
+-                .lr_cactus(None, laidx, laidx + 1, n.pstack.clone(), &mut None);
+-        if n.pstack != n_pstack {
+-            let n_repairs = if new_laidx > laidx {
+-                n.repairs.child(RepairMerge::Repair(Repair::Shift))
+-            } else {
+-                n.repairs.clone()
+-            };
++                .lr_cactus(None, laidx, laidx + PARSE_AT_LEAST, n.pstack.clone(), &mut None);
++        if new_laidx > laidx || (new_laidx == laidx + PARSE_AT_LEAST && self.parser.stable.action(*n_pstack.val().unwrap(), self.parser.next_tidx(new_laidx)) == Action::Accept) {
++            let mut n_repairs = n.repairs.clone();
++            for _ in laidx..new_laidx {
++                n_repairs = n.repairs.child(RepairMerge::Repair(Repair::Shift));
++            }
+             let nn = PathFNode {
+                 pstack: n_pstack,
+                 laidx: new_laidx,
+diff --git lrpar/src/lib/ctbuilder.rs lrpar/src/lib/ctbuilder.rs
+index 3ac7e54..fda3115 100644
+--- lrpar/src/lib/ctbuilder.rs
++++ lrpar/src/lib/ctbuilder.rs
+@@ -154,7 +154,7 @@ where
+     pub fn new_with_storaget() -> Self {
+         CTParserBuilder {
+             mod_name: None,
+-            recoverer: RecoveryKind::MF,
++            recoverer: RecoveryKind::CPCTPlus,
+             yacckind: None,
+             error_on_conflicts: true,
+             conflicts: None,
