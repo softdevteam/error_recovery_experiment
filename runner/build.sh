@@ -94,6 +94,20 @@ if [ ! -f java_parser_panic ]; then
     cd ..
 fi
 
+if [ ! -f java_parser_corchuelo ]; then
+    cd grmtools
+    git reset --hard
+    patch -p0 < ../print_budget.patch
+    patch -p0 < ../dontmerge.patch
+    patch -p0 < ../corchuelo.patch
+    cd ../java_parser
+    sed -Ei "s/RecoveryKind::[a-zA-Z_]*[)]/RecoveryKind::CPCTPlus)/" build.rs
+    rm -rf target
+    cargo build --release
+    cp target/release/java_parser ../java_parser_corchuelo
+    cd ..
+fi
+
 if [ ! -d pykalibera ]; then
     git clone https://github.com/softdevteam/libkalibera/
     mv libkalibera/python/pykalibera pykalibera
