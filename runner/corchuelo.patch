@@ -1,46 +1,43 @@
 diff --git lrpar/src/lib/astar.rs lrpar/src/lib/astar.rs
-index b4b77c2..981d35f 100644
+index b4b77c2..48684d9 100644
 --- lrpar/src/lib/astar.rs
 +++ lrpar/src/lib/astar.rs
-@@ -1,4 +1,4 @@
--use std::{fmt::Debug, hash::Hash};
-+use std::{collections::VecDeque, fmt::Debug, hash::Hash};
- 
- use indexmap::{
-     indexmap,
-@@ -146,71 +146,23 @@ where
+@@ -146,11 +146,10 @@ where
      FM: Fn(&mut N, N),
      FS: Fn(&N) -> bool
  {
 -    let mut scs_nodes = Vec::new();
 -    let mut todo: Vec<IndexMap<N, N>> = vec![indexmap![start_node.clone() => start_node]];
--    let mut c: u16 = 0;
-+    let mut todo = VecDeque::new();
-+    todo.push_front((0, start_node.clone()));
+     let mut c: u16 = 0;
++    let mut todo = vec![vec![start_node.clone()]];
      let mut next = Vec::new();
 -    loop {
--        if todo[usize::from(c)].is_empty() {
--            c = c.checked_add(1).unwrap();
--            if usize::from(c) == todo.len() {
--                return Vec::new();
--            }
--            continue;
--        }
--
++    while !todo.is_empty() {
+         if todo[usize::from(c)].is_empty() {
+             c = c.checked_add(1).unwrap();
+             if usize::from(c) == todo.len() {
+@@ -159,58 +158,23 @@ where
+             continue;
+         }
+ 
 -        let n = todo[usize::from(c)].pop().unwrap().1;
 -        if success(&n) {
 -            scs_nodes.push(n);
 -            break;
 -        }
-+    while !todo.is_empty() {
-+        let (c, n) = todo.pop_front().unwrap();
++        let n = todo[usize::from(c)].pop().unwrap();
  
          if !neighbours(true, &n, &mut next) {
              return Vec::new();
          }
          for (nbr_cost, nbr) in next.drain(..) {
--            let off = usize::from(nbr_cost);
--            for _ in todo.len()..off + 1 {
++            if success(&nbr) {
++                println!("repair cost {}", c);
++                return vec![nbr];
++            }
++
+             let off = usize::from(nbr_cost);
+             for _ in todo.len()..off + 1 {
 -                todo.push(IndexMap::new());
 -            }
 -            match todo[off].entry(nbr.clone()) {
@@ -50,12 +47,9 @@ index b4b77c2..981d35f 100644
 -                Entry::Occupied(mut e) => {
 -                    merge(&mut e.get_mut(), nbr);
 -                }
-+            if success(&nbr) {
-+                println!("repair cost {}", c);
-+                return vec![nbr];
++                todo.push(Vec::new());
              }
-+
-+            todo.push_back((nbr_cost, nbr));
++            todo[off].push(nbr);
          }
      }
 -
