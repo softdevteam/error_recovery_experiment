@@ -434,7 +434,7 @@ with open("experimentstats.tex", "w") as f:
     f.write("\n")
     f.write(r"\newcommand{\corpussizemb}{\numprint{%s}\xspace}" % str(size_bytes / 1024 / 1024))
     f.write("\n")
-    for x in [cpctplus, cpctplusdontmerge, cpctplusrev, panic]:
+    for x in [cpctplus, cpctplusdontmerge, cpctpluslonger, cpctplusrev, panic]:
         f.write(r"\newcommand{%ssuccessrate}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
                 (x.latex_name, 100.0 - x.failure_rate_ci.median, ci_pp(x.failure_rate_ci.error, 3)))
         f.write("\n")
@@ -485,12 +485,6 @@ sys.stdout.write("Time histograms...")
 sys.stdout.flush()
 time_histogram(cpctplus, "cpctplus_histogram.pdf")
 sys.stdout.write(" cpctplus")
-sys.stdout.flush()
-time_histogram(cpctplusdontmerge, "cpctplusdontmerge_histogram.pdf")
-sys.stdout.write(" cpctplusdontmerge")
-sys.stdout.flush()
-time_histogram(cpctplusrev, "cpctplusrev_histogram.pdf")
-sys.stdout.write(" cpctplusrev")
 sys.stdout.flush()
 time_histogram(cpctpluslonger, "cpctpluslonger_histogram.pdf", budget=2.0)
 sys.stdout.write(" cpctpluslonger")
