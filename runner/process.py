@@ -434,7 +434,7 @@ with open("experimentstats.tex", "w") as f:
     f.write("\n")
     f.write(r"\newcommand{\corpussizemb}{\numprint{%s}\xspace}" % str(size_bytes / 1024 / 1024))
     f.write("\n")
-    for x in [cpctplus, cpctplusdontmerge, cpctplusrev, panic]:
+    for x in [cpctplus, cpctplusdontmerge, cpctpluslonger, cpctplusrev, panic]:
         f.write(r"\newcommand{%ssuccessrate}{%.2f\%%{\footnotesize$\pm$%s\%%}\xspace}" % \
                 (x.latex_name, 100.0 - x.failure_rate_ci.median, ci_pp(x.failure_rate_ci.error, 3)))
         f.write("\n")
