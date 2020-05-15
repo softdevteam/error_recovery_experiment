@@ -298,7 +298,7 @@ def error_locs_histogram(run1, run2, p, zoom=None):
             d = []
             for pexecs in run.pexecs:
                 pexec = random.choice(pexecs)
-                if pexec.succeeded:
+                if pexec.succeeded or len(pexec.costs) > 0:
                     if zoom is None or len(pexec.costs) <= zoom:
                         d.append(len(pexec.costs))
             hbins, _ = histogram(d, bins=num_bins, range=(0, max_error_locs))
