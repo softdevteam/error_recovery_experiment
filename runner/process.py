@@ -481,6 +481,10 @@ with open("table.tex", "w") as f:
         if x.latex_name == "\\panic":
             f.write("\midrule\n")
 
+cpctplusdontmerge = None
+corchuelo = None
+panic = None
+
 sys.stdout.write("Time histograms...")
 sys.stdout.flush()
 time_histogram(cpctplus, "cpctplus_histogram.pdf")
@@ -490,6 +494,9 @@ time_histogram(cpctpluslonger, "cpctpluslonger_histogram.pdf", budget=2.0)
 sys.stdout.write(" cpctpluslonger")
 sys.stdout.flush()
 print
+
+cpctpluslonger = None
+
 sys.stdout.write("Error locations histogram...")
 sys.stdout.flush()
 error_locs_histogram(cpctplus, cpctplusrev, "cpctplus_cpctplusrev_error_locs_histogram_full.pdf")
