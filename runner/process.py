@@ -332,6 +332,10 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     barlist = plt.bar(range(ERROR_LOCS_HISTOGRAM_BINS * 2), flat_zip(run1_bins, run2_bins), yerr=flat_zip(run1_errs, run2_errs), \
             align="center", log=True, color=["black", "red"], \
             error_kw={"ecolor": "black", "elinewidth": 1, "capthick": 0.5, "capsize": 1})
+
+    run1_bins = run1_errs = None
+    run2_bins = run2_errs = None
+
     plt.yscale('symlog')
     for i in range(0, len(barlist), 2):
         barlist[i].set_color("#777777")
