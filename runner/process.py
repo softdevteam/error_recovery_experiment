@@ -298,7 +298,7 @@ def error_locs_histogram(run1, run2, p, zoom=None):
             d = []
             for pexecs in run.pexecs:
                 pexec = random.choice(pexecs)
-                if pexec.succeeded:
+                if pexec.succeeded or len(pexec.costs) > 0:
                     if zoom is None or len(pexec.costs) <= zoom:
                         d.append(len(pexec.costs))
             hbins, _ = histogram(d, bins=num_bins, range=(0, max_error_locs))
@@ -332,6 +332,11 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     barlist = plt.bar(range(ERROR_LOCS_HISTOGRAM_BINS * 2), flat_zip(run1_bins, run2_bins), yerr=flat_zip(run1_errs, run2_errs), \
             align="center", log=True, color=["black", "red"], \
             error_kw={"ecolor": "black", "elinewidth": 1, "capthick": 0.5, "capsize": 1})
+
+    run1_bins = run1_errs = None
+    run2_bins = run2_errs = None
+
+    plt.yscale('symlog')
     for i in range(0, len(barlist), 2):
         barlist[i].set_color("#777777")
         barlist[i + 1].set_color("#BBBBBB")
@@ -345,20 +350,29 @@ def error_locs_histogram(run1, run2, p, zoom=None):
     ax.spines['top'].set_visible(False)
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
+    ax.yaxis.set_tick_params(which='minor', size=0)
+    ax.yaxis.set_tick_params(which='minor', width=0)
     plt.xlim(xmin=-.7, xmax=ERROR_LOCS_HISTOGRAM_BINS * 2)
-    plt.ylim(ymax=len(run1.pexecs))
+    plt.ylim(ymin=0, ymax=len(run1.pexecs))
     locs = []
     labs = []
     for i in range(0, 8):
         locs.append((ERROR_LOCS_HISTOGRAM_BINS / 7) * i * 2 - 0.5)
         labs.append(int(round((max_error_locs / 7.0) * i)))
     plt.xticks(locs, labs)
-    yticks = []
+    ylocs = []
+    ylabs = []
     i = len(run1.pexecs)
-    while i >= 10:
-        yticks.append(i)
+    while True:
+        if i < 1:
+            ylocs.append(0)
+            ylabs.append(0)
+            break
+        else:
+            ylocs.append(i)
+            ylabs.append(i)
         i /= 10
-    plt.yticks(yticks, [str(x) for x in yticks])
+    plt.yticks(ylocs, ylabs)
     formatter = ScalarFormatter()
     formatter.set_scientific(False)
     ax.yaxis.set_major_formatter(formatter)
