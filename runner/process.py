@@ -132,10 +132,8 @@ class Results:
             costs = []
             for pexecs in self.pexecs:
                 pexec = random.choice(pexecs)
-                if pexec.succeeded:
-                    costs.extend(pexec.costs)
-            if len(costs) > 0:
-                out.append(mean(costs))
+                costs.extend(pexec.costs)
+            out.append(mean(costs))
         return out
 
     def bootstrap_input_skipped(self):
